@@ -1,21 +1,15 @@
-# XOX Rogue
+# XOX Pop
 
-A mobile-first roguelike built on tic-tac-toe. Pick a character, collect relics that combo in sets, pick your opponent before each match, and beat three bosses that each play a different game.
+A one-thumb puzzle game that works offline. Drag X and O pieces onto a 6×6 board. Three of the same mark in a line (across, down or diagonal) pops. Pop again on your next piece for a streak bonus. The game ends when none of your three pieces fit.
 
-Play: open `index.html` (single self-contained file).
-
-## What's in a run
-
-- **Characters:** Frost and Ember to start; Thief, Twin and Knight unlock by beating bosses.
-- **Relic sets:** Frost, Fire, Tempo, Luck and Guard. Own 2 or 3 of a set for a bonus.
-- **Opponents:** nine named opponents, each with one habit you can play around.
-- **Bosses:** Speed Round (best of 3 on 3x3, timed), Gravity (marks drop, the floor falls), Super XOX (first to 3 boards, three phases). Every relic works in every game.
+Play: open `index.html`. Served over https (for example GitHub Pages), it installs to the home screen and works without internet after the first visit.
 
 ## Develop
 
-- `src/engine.js` search AI for any k-in-a-row grid (5x5, 3x3, gravity) and Super XOX
-- `src/game.js` characters, relics, sets, opponents, bosses, run flow
-- `src/ui.js`, `src/style.css`, `src/template.html` interface
-- `node build.js` bundles everything into `index.html`
-- `node test/test_engine.js` and `node test/test_game.js` run the tests
-- `node test/balance.js 3` plays a strong bot against every opponent and boss
+- `src/game.js` rules: pieces, popping, scoring, difficulty ramp (no DOM)
+- `src/ui.js`, `src/style.css`, `src/template.html` interface: drag or tap to place, sounds, haptics, autosave
+- `src/sw.js` offline cache template
+- `node build.js` bundles everything into `index.html` and writes `sw.js`
+- `node test/test_game.js` runs the tests
+- `node test/sim.js 300` plays bots (random, casual, greedy) to show how long games last; pass a JSON config to try tuning, e.g. `node test/sim.js 200 '{"diagonals":false}'`
+- `node test/icons.js` renders `icon.svg` to the PNG app icons (needs Playwright)

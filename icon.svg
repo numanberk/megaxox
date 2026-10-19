@@ -1,12 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#ECEFF4"/>
-  <g fill="none" stroke-linecap="round" stroke-width="38">
-    <rect x="96" y="96" width="140" height="140" rx="34" fill="#C9D6FF" stroke="none"/>
-    <rect x="276" y="96" width="140" height="140" rx="34" fill="#FBD0E2" stroke="none"/>
-    <rect x="96" y="276" width="140" height="140" rx="34" fill="#FBD0E2" stroke="none"/>
-    <rect x="276" y="276" width="140" height="140" rx="34" fill="#C9D6FF" stroke="none"/>
-    <path d="M136 136l60 60M196 136l-60 60M316 316l60 60M376 316l-60 60" stroke="#1D4FFF"/>
-    <circle cx="346" cy="166" r="34" stroke="#E8247A"/>
-    <circle cx="166" cy="346" r="34" stroke="#E8247A"/>
+  <defs>
+    <linearGradient id="x" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#6E9BFF"/><stop offset=".55" stop-color="#3566FF"/><stop offset="1" stop-color="#2A50E2"/></linearGradient>
+    <linearGradient id="o" x1="0" y1="0" x2=".35" y2="1"><stop offset="0" stop-color="#FF84BE"/><stop offset=".55" stop-color="#F23F8C"/><stop offset="1" stop-color="#DE2B78"/></linearGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#EEF1F7"/>
+  <g id="bx"><rect x="92" y="92" width="150" height="150" rx="34" fill="#1C37B4"/><rect x="92" y="92" width="150" height="136" rx="34" fill="url(#x)"/><rect x="114" y="102" width="106" height="40" rx="20" fill="url(#g)"/></g>
+  <use href="#bx" x="178" y="178"/>
+  <g><rect x="270" y="92" width="150" height="150" rx="34" fill="#A3155A"/><rect x="270" y="92" width="150" height="136" rx="34" fill="url(#o)"/><rect x="292" y="102" width="106" height="40" rx="20" fill="url(#g)"/></g>
+  <g><rect x="92" y="270" width="150" height="150" rx="34" fill="#A3155A"/><rect x="92" y="270" width="150" height="136" rx="34" fill="url(#o)"/><rect x="114" y="280" width="106" height="40" rx="20" fill="url(#g)"/></g>
+  <g fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round">
+    <path d="M136 132l62 62M198 132l-62 62M314 310l62 62M376 310l-62 62"/>
+    <circle cx="345" cy="163" r="33"/><circle cx="167" cy="341" r="33"/>
   </g>
 </svg>

@@ -3,7 +3,7 @@
   'use strict';
   var E = XOX, G = Game;
   var app = document.getElementById('app');
-  var SAVE = 'xoxrogue.run.v1', BEST = 'xoxrogue.best.v1';
+  var SAVE = 'xoxrogue.run.v2', BEST = 'xoxrogue.best.v1';
   var FULL = (1 << 25) - 1;
   var run = null;
   var ui = { msg: '', thinking: false, prevX: 0, prevO: 0, prevKey: '', best: null, saved: null, screenKey: '', boardTurn: false };
@@ -25,29 +25,28 @@
 
   /* ---------- icons ---------- */
   var ICONS = {
-    doubletap: '<path d="M4 4l6 6M10 4l-6 6"/><path d="M14 14l6 6M20 14l-6 6"/>',
-    turncoat: '<path d="M5 10a7 7 0 0 1 12-3.5M19 3.5V8h-4.5"/><path d="M19 14a7 7 0 0 1-12 3.5M5 20.5V16h4.5"/>',
-    eraser: '<path d="M3.5 15.5l9-10 8 7.5-6 6.5H8z"/><path d="M9 19.5h11.5"/>',
-    switcheroo: '<path d="M4 8h14M14 4l4 4-4 4"/><path d="M20 16H6M10 12l-4 4 4 4"/>',
-    bomb: '<circle cx="11" cy="14" r="6"/><path d="M15.5 9.5L18 7M17 4.5l2.5.5M19.5 7.5l.5 2.5"/>',
-    landslide: '<path d="M3 7h13M13 4l3 3-3 3"/><path d="M21 17H8M11 14l-3 3 3 3"/>',
+    freeze: '<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5L4.2 16.5"/><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/>',
+    zap: '<path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z"/>',
+    nuke: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',
+    hint: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
     rewind: '<path d="M4 12a8 8 0 1 0 2.6-5.9M4 3.5V8h4.5"/>',
-    ghost: '<path d="M5 20V11a7 7 0 0 1 14 0v9l-3.5-2.2L12 20l-3.5-2.2z"/><circle cx="9.5" cy="11" r=".9" fill="currentColor"/><circle cx="14.5" cy="11" r=".9" fill="currentColor"/>',
-    sanctuary: '<rect x="5" y="5" width="14" height="14" stroke-dasharray="3 2.6"/><path d="M12 9v6M9 12h6"/>',
-    oracle: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',
+    center: '<rect x="3.5" y="3.5" width="17" height="17"/><circle cx="12" cy="12" r="3" fill="currentColor"/>',
+    freebie: '<rect x="4" y="10" width="16" height="10"/><path d="M3 7h18v3H3zM12 7v13M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"/>',
+    strike: '<path d="M4 4l6 6M10 4l-6 6"/><path d="M14 14l6 6M20 14l-6 6"/>',
+    sleepy: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>',
     corners: '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
     plus: '<path d="M9 3.5h6V9h5.5v6H15v5.5H9V15H3.5V9H9z"/>',
-    safetynet: '<path d="M3 8h18M3 14h18M8 3v18M15 3v18"/>',
-    thickskin: '<path d="M12 3l7 3v6c0 4.2-3 7.2-7 9-4-1.8-7-4.8-7-9V6z"/>',
-    tipjar: '<path d="M8 4h8M9 4v3L6.5 10v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-9L15 7V4"/><circle cx="12" cy="14.5" r="2.2"/>',
+    safetynet: '<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="15" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+    heartup: '<path d="M12 20s-8-4.8-8-10.5A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.5C20 15.2 12 20 12 20z"/><path d="M12 10.5v5M9.5 13h5"/>',
+    ironheart: '<path d="M12 3l7 3v6c0 4.2-3 7.2-7 9-4-1.8-7-4.8-7-9V6z"/>',
+    secondlife: '<path d="M12 20s-8-4.8-8-10.5A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.5C20 15.2 12 20 12 20z"/><path d="M8 13h2l1.2-2.5 1.6 4 1.2-1.5H16"/>',
+    piggy: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M14.5 9.5c-.6-.8-1.5-1.1-2.5-1.1-1.4 0-2.4.7-2.4 1.8 0 2.6 5 1.4 5 4 0 1.1-1.1 1.9-2.6 1.9-1 0-2-.4-2.6-1.2"/>',
     haggler: '<path d="M3.5 12V4.5H11l9.5 9.5-7 7z"/><circle cx="8" cy="9" r="1.3"/>',
-    secondwind: '<path d="M12 20s-8-4.8-8-10.5A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.5C20 15.2 12 20 12 20z"/>',
     battery: '<rect x="3" y="8" width="16" height="8" rx="1.5"/><path d="M21 11v2M7 11v2M11 11v2M15 11v2"/>',
-    redirect: '<path d="M5 20V10a4 4 0 0 1 4-4h10M15 2l4 4-4 4"/>',
+    overplay: '<path d="M5 5l7 7-7 7M12 5l7 7-7 7"/>',
     freepass: '<path d="M3.5 8h17v3a2 2 0 0 0 0 4v3h-17v-3a2 2 0 0 0 0-4z"/><path d="M14 8v10" stroke-dasharray="2 2"/>',
-    landmine: '<circle cx="12" cy="14" r="5"/><path d="M12 5.5v3.5M5.5 7.5l2.5 2.5M18.5 7.5L16 10"/>',
     castingvote: '<rect x="4" y="12" width="16" height="8"/><path d="M8 12V9l4-4 4 4v3M9.5 16h5"/>',
-    overplay: '<path d="M5 5l7 7-7 7M12 5l7 7-7 7"/>'
+    sneak: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><path d="M4 4l16 16"/>'
   };
   var HEART = '<path d="M12 20s-8-4.8-8-10.5A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.5C20 15.2 12 20 12 20z"/>';
   var XM = '<svg class="m" viewBox="0 0 40 40" aria-hidden="true"><path d="M8 8L32 32"/><path d="M32 8L8 32"/></svg>';
@@ -109,11 +108,17 @@
       '</div></section>';
   }
 
+  function useTag(id) {
+    var r = G.RELICS[id];
+    if (!r) return 'Boss trick';
+    return r.kind === 'active' ? 'Button \u00B7 ' + r.charges + (r.charges > 1 ? ' uses' : ' use') + ' per act' : 'Automatic';
+  }
+
   function relicCardBtn(id, act, label) {
     var r = info(id);
     return '<button class="card" data-act="' + act + '" data-id="' + id + '">' + ic(id) +
       '<span class="body"><h3>' + r.name + '</h3><p>' + r.desc + '</p></span>' +
-      '<span class="foot"><span class="tag-line">' + (G.RELICS[id] && G.RELICS[id].kind === 'active' ? (G.RELICS[id].charges > 1 ? G.RELICS[id].charges + ' charges per act' : '1 charge per act') : 'Always on') + '</span><span class="btn sm primary" aria-hidden="true">' + label + '</span></span></button>';
+      '<span class="foot"><span class="tag-line">' + useTag(id) + '</span><span class="btn sm primary" aria-hidden="true">' + label + '</span></span></button>';
   }
 
   function screenStarter() {
@@ -127,7 +132,7 @@
     if (!run.relics.length) return '';
     return '<div class="stack"><p class="mono">Your relics</p><div class="tray">' + run.relics.map(function (id) {
       var r = G.RELICS[id], act = r.kind === 'active';
-      return '<div class="relic ' + (act ? '' : 'passive') + '" style="cursor:default">' + ic(id) + '<span class="t"><span class="rn">' + r.name + '</span>' + (act ? pips(run.charges[id] || 0, maxCharges(id)) : '<span class="pl">Always on</span>') + '</span></div>';
+      return '<div class="relic ' + (act ? '' : 'passive') + '" style="cursor:default">' + ic(id) + '<span class="t"><span class="rn">' + r.name + '</span>' + (act ? pips(run.charges[id] || 0, maxCharges(id)) : '<span class="pl">Automatic</span>') + '</span></div>';
     }).join('') + '</div></div>';
   }
 
@@ -151,51 +156,28 @@
           var t = G.TRICKS[id], on = run.trick === id;
           return '<button class="card" data-act="trick" data-id="' + id + '" aria-pressed="' + on + '">' + ic(id) + '<span class="body"><h3>' + t.name + '</h3><p>' + t.desc + '</p></span></button>';
         }).join('') + '</div></div>' +
-        (run.relics.some(function (id) { return id === 'rewind' || id === 'oracle'; }) ? '<p class="tag-line">Rewind and Oracle also work here.</p>' : '') +
+        (run.relics.some(function (id) { return id === 'rewind' || id === 'hint'; }) ? '<p class="tag-line">Rewind and Hint also work here.</p>' : '') +
         '<button class="btn primary block" data-act="startmatch"' + (run.trick ? '' : ' disabled') + '>' + (run.trick ? 'Start the boss fight' : 'Pick a trick first') + '</button>';
     }
     return out;
   }
 
   /* ----- 5x5 ----- */
-  function rowMask(r) { var m = 0; for (var k = 0; k < 5; k++) m |= 1 << (r * 5 + k); return m; }
-  function colMask(c) { var m = 0; for (var k = 0; k < 5; k++) m |= 1 << (k * 5 + c); return m; }
-  function hints5(m) {
-    var p = m.pending, hint = 0, sel = 0;
-    if (!p || m.over) return { hint: 0, sel: 0 };
-    var empt = FULL & ~(m.x | m.o | m.b);
-    switch (p.id) {
-      case 'doubletap': case 'ghost': case 'sanctuary': case 'oracle': hint = empt; break;
-      case 'eraser': case 'turncoat': hint = m.o & ~m.shield; break;
-      case 'switcheroo':
-        var marks = (m.x | m.o) & ~m.ghost & ~m.shield;
-        if (p.a < 0) hint = marks; else { sel = 1 << p.a; hint = ((m.x & (1 << p.a)) ? m.o : m.x) & ~m.ghost & ~m.shield; }
-        break;
-      case 'bomb': if (p.anchor >= 0) sel = G.bombMask(p.anchor); break;
-      case 'landslide': if (p.cell >= 0) sel = rowMask(Math.floor(p.cell / 5)) | colMask(p.cell % 5); break;
-    }
-    return { hint: hint, sel: sel };
-  }
   function cellLabel(m, i) {
     var b = 1 << i, st = 'empty';
-    if (m.b & b) st = 'stone'; else if (m.x & b) st = (m.ghost & b) ? 'your hidden mark' : 'your mark'; else if (m.o & b) st = (m.shield & b) ? 'AI mark, armored' : 'AI mark';
-    if ((m.ban & b) && st === 'empty') st = 'empty, reserved for you';
+    if (m.b & b) st = 'blocked'; else if (m.x & b) st = 'your mark'; else if (m.o & b) st = 'AI mark';
     return 'Row ' + (Math.floor(i / 5) + 1) + ', column ' + (i % 5 + 1) + ': ' + st;
   }
   function board5(m) {
-    var h = hints5(m), fresh = (m.x & ~ui.prevX) | (m.o & ~ui.prevO), out = '<div class="board5" role="group" aria-label="5 by 5 board">';
+    var fresh = (m.x & ~ui.prevX) | (m.o & ~ui.prevO), out = '<div class="board5" role="group" aria-label="5 by 5 board">';
     for (var i = 0; i < 25; i++) {
       var b = 1 << i, cls = 'cell', inner = '';
       if (m.b & b) { cls += ' stone'; inner = STONE; }
-      else if (m.x & b) { cls += ' x'; inner = XM; if (m.ghost & b) cls += ' ghost'; }
-      else if (m.o & b) { cls += ' o'; inner = OM; if (m.shield & b) cls += ' shield'; }
-      if (m.ban & b) cls += ' ban';
-      if (h.hint & b) cls += ' hint';
-      if (h.sel & b) cls += ' sel';
+      else if (m.x & b) { cls += ' x'; inner = XM; }
+      else if (m.o & b) { cls += ' o'; inner = OM; }
       if (fresh & b) cls += ' fresh';
       if (m.winMask & b) cls += ' win';
-      if (m.oracle && m.oracle.from === i) cls += ' ofrom';
-      if (m.oracle && m.oracle.to === i) { cls += ' oto'; inner += '<i class="tag" style="color:var(--o)">AI</i>'; }
+      if (m.hint === i) cls += ' hint';
       if (m.lastAI === i && (m.o & b) && !m.over) { cls += ' last'; inner += '<i class="dot"></i>'; }
       out += '<button class="' + cls + '" data-act="cell" data-i="' + i + '" aria-label="' + cellLabel(m, i) + '">' + inner + '</button>';
     }
@@ -203,7 +185,7 @@
   }
 
   function statusHtml(m) {
-    var text, ctl = '';
+    var text;
     if (run.phase === 'result') {
       var o = run.result;
       if (o.boss) text = o.outcome === 'win' ? 'You took the boss down.' : 'The boss fight is over.';
@@ -212,17 +194,11 @@
       else text = m.over === 'draw' ? 'No line left to win.' : 'The AI got four in a row.';
     } else if (ui.thinking) text = '<span class="dots">The AI is thinking</span>';
     else if (ui.msg) text = esc(ui.msg);
-    else if (m.pending) text = esc(info(m.pending.id).hint || 'Pick a target.');
+    else if (m.kind === '5' && m.perks.strike && m.xTurns % 3 === 2) text = 'Double Strike turn: place 2 marks.';
     else if (m.kind === '5') text = 'Your move. Four in a row wins.';
+    else if (m.extra > 0) text = 'Overplay: you move twice.';
     else text = m.S.next >= 0 ? 'Play in the highlighted board.' : 'The boss sent you anywhere. Play on any open board.';
-    if (run.phase === 'match' && m.pending && !ui.thinking && !(m.pending.id === 'doubletap' && m.pending.placed)) {
-      if (m.pending.id === 'landslide' && m.pending.cell >= 0 && m.kind === '5') {
-        ctl += '<button class="btn sm" data-act="slide" data-kind="row" data-dir="-1">Row ←</button><button class="btn sm" data-act="slide" data-kind="row" data-dir="1">Row →</button>' +
-          '<button class="btn sm" data-act="slide" data-kind="col" data-dir="-1">Col ↑</button><button class="btn sm" data-act="slide" data-kind="col" data-dir="1">Col ↓</button>';
-      }
-      ctl += '<button class="btn sm" data-act="cancel">Cancel</button>';
-    }
-    return '<div class="status" aria-live="polite"><p>' + text + '</p>' + (ctl ? '<div class="ctl">' + ctl + '</div>' : '') + '</div>';
+    return '<div class="status" aria-live="polite"><p>' + text + '</p></div>';
   }
 
   function trayHtml(m) {
@@ -234,16 +210,16 @@
         else items.push({ id: id, active: false });
       });
     } else {
-      if (m.trick && m.trick !== 'castingvote') items.push({ id: m.trick, active: true, n: m.charges[m.trick] || 0, max: 1 + (G.has(run, 'battery') ? 1 : 0) });
-      if (m.trick === 'castingvote') items.push({ id: 'castingvote', active: false, trick: true });
-      ['rewind', 'oracle'].forEach(function (id) { if (m.charges[id] !== undefined) items.push({ id: id, active: true, n: m.charges[id], max: maxCharges(id) }); });
+      if (m.trick === 'overplay' || m.trick === 'freepass') items.push({ id: m.trick, active: true, n: m.charges[m.trick] || 0, max: 1 + (G.has(run, 'battery') ? 1 : 0) });
+      else if (m.trick) items.push({ id: m.trick, active: false, trick: true });
+      ['rewind', 'hint'].forEach(function (id) { if (m.charges[id] !== undefined) items.push({ id: id, active: true, n: m.charges[id], max: maxCharges(id) }); });
     }
     if (!items.length) return '';
     return '<div class="tray">' + items.map(function (it) {
-      var r = info(it.id), pressed = it.active && m.pending && m.pending.id === it.id, empty = it.active && it.n < 1;
-      var armed = m.kind === 'boss' && ((it.id === 'redirect' && m.redirectArmed) || (it.id === 'overplay' && m.extra > 0));
-      return '<button class="relic' + (it.active ? '' : ' passive') + (empty && !pressed ? ' empty' : '') + '" data-act="relic" data-id="' + it.id + '" aria-pressed="' + (pressed || armed ? 'true' : 'false') + '" title="' + esc(r.desc) + '"' + (it.active && !live && !pressed ? ' aria-disabled="true"' : '') + '>' +
-        ic(it.id) + '<span class="t"><span class="rn">' + r.name + '</span>' + (it.active ? pips(it.n, it.max) : '<span class="pl">' + (it.trick ? 'Active this fight' : 'Always on') + '</span>') + '</span></button>';
+      var r = info(it.id), empty = it.active && it.n < 1;
+      var armed = (it.id === 'freeze' && m.kind === '5' && m.freeze > 0) || (it.id === 'overplay' && m.kind === 'boss' && m.extra > 0);
+      return '<button class="relic' + (it.active ? '' : ' passive') + (empty ? ' empty' : '') + '" data-act="relic" data-id="' + it.id + '" aria-pressed="' + (armed ? 'true' : 'false') + '" title="' + esc(r.desc) + '"' + (it.active && !live ? ' aria-disabled="true"' : '') + '>' +
+        ic(it.id) + '<span class="t"><span class="rn">' + r.name + '</span>' + (it.active ? pips(it.n, it.max) : '<span class="pl">' + (it.trick ? 'Boss trick' : 'Automatic') + '</span>') + '</span></button>';
     }).join('') + '</div>';
   }
 
@@ -269,8 +245,13 @@
   }
 
   function counterBar(m) {
-    if (!m.counters || !m.counters.length) return '';
-    return '<div class="chips"><span class="mono">AI relics</span>' + m.counters.map(function (id) { return '<span class="chip" title="' + esc(G.COUNTERS[id].desc) + '">' + G.COUNTERS[id].name + '</span>'; }).join('') + '</div>';
+    var out = '';
+    if (m.counters && m.counters.length) out += '<div class="chips"><span class="mono">AI relics</span>' + m.counters.map(function (id) { return '<span class="chip" title="' + esc(G.COUNTERS[id].desc) + '">' + G.COUNTERS[id].name + '</span>'; }).join('') + '</div>';
+    var p = [];
+    if (m.perks && m.perks.strike) { var n = (3 - m.xTurns % 3) % 3; p.push('Double Strike: ' + (n === 0 ? 'this turn' : 'in ' + n)); }
+    if (m.perks && m.perks.sleepy) { var k = 4 - (m.aiDue % 4); p.push('AI sleeps: ' + (k === 1 ? 'next turn' : 'in ' + k)); }
+    if (p.length) out += '<div class="chips">' + p.map(function (t) { return '<span class="chip good">' + t + '</span>'; }).join('') + '</div>';
+    return out;
   }
 
   function screenMatch5() {
@@ -282,25 +263,21 @@
   /* ----- boss (Super XOX) ----- */
   function board9(m) {
     var S = m.S, myTurn = run.phase === 'match' && m.turn === 'X' && !m.over && !ui.thinking;
-    var pickMode = myTurn && m.pending && (m.pending.id === 'landmine' || m.pending.id === 'redirect');
     var legal = {};
-    if (myTurn && !pickMode) E.superMoves(S).forEach(function (mv) { legal[mv[0] * 9 + mv[1]] = 1; });
+    if (myTurn) E.superMoves(S).forEach(function (mv) { legal[mv[0] * 9 + mv[1]] = 1; });
     var out = '<div class="board9' + (ui.boardTurn ? ' turn' : '') + '" role="group" aria-label="Super XOX board">';
     for (var b = 0; b < 9; b++) {
       var res = S.res[b], cls = 'sub';
       if (res === 1) cls += ' won wx'; else if (res === 2) cls += ' won wo'; else if (res === 3) cls += ' dead';
       else if (!m.over && (S.next < 0 || S.next === b)) cls += S.next < 0 ? ' free' : ' live';
-      if (pickMode && res === 0) cls += ' pick';
-      out += '<div class="' + cls + '" data-act="' + (pickMode && res === 0 ? 'cell9' : '') + '" data-b="' + b + '" data-c="0">';
+      out += '<div class="' + cls + '" data-b="' + b + '">';
       if (S.cursed === b) out += '<span class="badge">CURSED</span>';
-      if (m.mine === b) out += '<span class="badge mine">MINE</span>';
       for (var c = 0; c < 9; c++) {
         var bit = 1 << c, ccls = 'cell', inner = '';
         if (S.bx[b] & bit) { ccls += ' x'; inner = XM; } else if (S.bo[b] & bit) { ccls += ' o'; inner = OM; }
         if (legal[b * 9 + c]) ccls += ' legal';
         if (m.lastAI && m.lastAI.b === b && m.lastAI.c === c && !m.over) { ccls += ' last'; inner += '<i class="dot" style="top:3px;left:3px;width:6px;height:6px"></i>'; }
-        if (m.oracle && m.oracle.from && m.oracle.from[0] === b && m.oracle.from[1] === c) ccls += ' ofrom';
-        if (m.oracle && m.oracle.to && m.oracle.to[0] === b && m.oracle.to[1] === c) { ccls += ' oto'; inner += '<i class="tag" style="color:var(--o);font-size:8px">AI</i>'; }
+        if (m.hint && m.hint[0] === b && m.hint[1] === c) ccls += ' hint';
         var lab = 'Board ' + (b + 1) + ', square ' + (c + 1) + (S.bx[b] & bit ? ': your mark' : (S.bo[b] & bit ? ': boss mark' : ''));
         out += '<button class="' + ccls + '" data-act="cell9" data-b="' + b + '" data-c="' + c + '" aria-label="' + lab + '">' + inner + '</button>';
       }
@@ -322,7 +299,7 @@
   function screenShop() {
     var cards = run.shop.map(function (id) {
       var r = G.RELICS[id], p = G.priceOf(run, id), can = run.gold >= p;
-      return '<div class="card static">' + ic(id) + '<span class="body"><h3>' + r.name + '</h3><p>' + r.desc + '</p></span><span class="foot"><span class="tag-line">' + (r.kind === 'active' ? (r.charges > 1 ? r.charges + ' charges per act' : '1 charge per act') : 'Always on') + '</span>' +
+      return '<div class="card static">' + ic(id) + '<span class="body"><h3>' + r.name + '</h3><p>' + r.desc + '</p></span><span class="foot"><span class="tag-line">' + useTag(id) + '</span>' +
         '<button class="btn sm primary" data-act="buy" data-id="' + id + '"' + (can ? '' : ' disabled') + '>Buy · ' + p + ' gold</button></span></div>';
     }).join('');
     var hp = G.healPrice(run), canHeal = run.hearts < run.maxHearts && run.gold >= hp;
@@ -381,6 +358,7 @@
   }
   function afterAction() {
     var m = run.match;
+    if (m && m.flash) { ui.msg = (ui.msg ? ui.msg + ' ' : '') + m.flash; m.flash = ''; }
     if (run.phase === 'match' && m && m.over) G.resolve(run);
     if (run.phase === 'end') finishRun(); else save();
     var needAI = run.phase === 'match' && m && !m.over && m.turn === 'O';
@@ -422,18 +400,10 @@
       case 'relic':
         if (!m || run.phase !== 'match') return;
         var id = d.id, r = G.RELICS[id] || G.TRICKS[id];
-        if (id === 'castingvote' || (G.RELICS[id] && G.RELICS[id].kind === 'passive')) { ui.msg = r.desc; render(); return; }
+        var isActive = G.RELICS[id] ? G.RELICS[id].kind === 'active' : (id === 'overplay' || id === 'freepass');
+        if (!isActive) { ui.msg = r.name + ': ' + r.desc; render(); return; }
         if (!canAct()) return;
-        if ((m.charges[id] || 0) < 1 && !(m.pending && m.pending.id === id)) { ui.msg = 'No charges left. They refill at the start of the next act.'; render(); return; }
-        msg = m.kind === '5' ? G.arm5(m, id) : G.armBoss(m, id);
-        ui.msg = msg || ''; afterAction(); break;
-      case 'cancel':
-        if (!m) return;
-        if (m.kind === '5') G.cancel5(m); else G.cancelBoss(m);
-        ui.msg = ''; render(); break;
-      case 'slide':
-        if (!canAct() || m.kind !== '5') return;
-        ui.msg = G.slide5(m, d.kind, +d.dir) || ''; afterAction(); break;
+        ui.msg = (m.kind === '5' ? G.use5(m, id) : G.useBoss(m, id)) || ''; afterAction(); break;
       case 'next': G.next(run); ui.msg = ''; afterAction(); break;
       case 'buy': ui.msg = G.buy(run, d.id); save(); render(); break;
       case 'heal': ui.msg = G.heal(run); save(); render(); break;
@@ -448,6 +418,7 @@
     onAct(t.dataset.act, t.dataset);
   });
 
+  lsDel('xoxrogue.run.v1');
   ui.best = loadBest();
   ui.saved = loadSaved();
   render();

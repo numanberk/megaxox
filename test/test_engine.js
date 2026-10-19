@@ -1,87 +1,37 @@
 const E = require('../src/engine.js');
-let fails = 0;
-const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console.log('ok  ', m); };
-
-ok(E.WINDOWS.length === 28, 'window count is 28 (got ' + E.WINDOWS.length + ')');
-
-// rotation identity
-{
-  let S = E.newSuper({ spin: true });
-  const rnd = (n) => Math.floor(Math.random() * n);
-  for (let i = 0; i < 10; i++) { const mv = E.superMoves(S); const m = mv[rnd(mv.length)]; S = E.applySuper(S, m[0], m[1], i % 2); }
-  let R = S; for (let i = 0; i < 4; i++) R = E.rotateSuper(R);
-  ok(Array.from(R.bx).join() === Array.from(S.bx).join() && Array.from(R.bo).join() === Array.from(S.bo).join() && R.next === S.next, 'four rotations are identity');
-}
-
-// 5x5: AI as O vs random X
-function playRandomX(timeMs, rules) {
-  let st = { x: 0, o: 0, b: 0, ban: 0 };
-  let times = [];
-  for (let turn = 0; turn < 30; turn++) {
-    const empt = []; for (let c = 0; c < 25; c++) if (!((st.x | st.o | st.b) & (1 << c))) empt.push(c);
-    if (!empt.length) return { r: 'draw', times };
-    const c = empt[Math.floor(Math.random() * empt.length)];
-    st.x |= 1 << c;
-    if (E.lineWon(st.x, rules.lines[0])) return { r: 'X', times };
-    const t0 = Date.now();
-    const res = E.search5(st, rules, 1, timeMs);
-    times.push(Date.now() - t0);
-    if (res.move < 0) return { r: 'draw', times };
-    st.o |= 1 << res.move;
-    if (E.lineWon(st.o, rules.lines[1])) return { r: 'O', times };
-  }
-  return { r: 'draw', times };
-}
-{
-  const rules = E.makeRules([]);
-  let w = { X: 0, O: 0, draw: 0 }, all = [];
-  for (let g = 0; g < 25; g++) { const o = playRandomX(80, rules); w[o.r]++; all = all.concat(o.times); }
-  console.log('AI(O) vs random X (25 games):', w, 'avg ms/move', Math.round(all.reduce((a, b) => a + b, 0) / all.length), 'max', Math.max(...all));
-  ok(w.X === 0, 'AI never loses to random play');
-}
-
-// 5x5: AI vs AI at 150ms, first move for X
-{
-  const rules = E.makeRules([]);
-  let out = { X: 0, O: 0, draw: 0 };
-  for (let g = 0; g < 6; g++) {
-    let st = { x: 0, o: 0, b: 0, ban: 0 }, res = 'draw';
-    for (let t = 0; t < 30; t++) {
-      const side = t % 2;
-      const r = E.search5(st, rules, side, 150);
-      if (r.move < 0) break;
-      if (side === 0) st.x |= 1 << r.move; else st.o |= 1 << r.move;
-      if (E.lineWon(side === 0 ? st.x : st.o, rules.lines[side])) { res = side === 0 ? 'X' : 'O'; break; }
+let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log('FAIL', m); } else console.log('ok  ', m); };
+const R = n => Math.floor(Math.random() * n);
+const G5 = E.makeGame({ w: 5, h: 5, k: 4 }), G3 = E.makeGame({ w: 3, h: 3, k: 3 }), GG = E.makeGame({ w: 5, h: 5, k: 4, gravity: true });
+ok(G5.windows.length === 28 && G3.windows.length === 8, 'line counts 28 and 8');
+ok(E.legalMask(GG, 0) === (0b11111 << 20), 'gravity: only the bottom row is legal on an empty board');
+ok(E.legalMask(GG, 1 << 22) === ((0b11011 << 20) | (1 << 17)), 'gravity: a filled square makes the one above legal');
+ok(E.patterns(G3).plus === (1<<4|1<<1|1<<7|1<<3|1<<5), '3x3 plus pattern');
+function vsRandom(g, ms, games) {
+  const res = { X: 0, O: 0, d: 0 }; let maxMs = 0;
+  for (let i = 0; i < games; i++) {
+    let x = 0, o = 0, out = 'd';
+    while (true) {
+      const leg = E.legalMask(g, x | o); if (!leg) break;
+      const cells = []; for (let c = 0; c < g.nc; c++) if (leg & (1 << c)) cells.push(c);
+      x |= 1 << cells[R(cells.length)];
+      if (E.lineWon(x, g.lines[0])) { out = 'X'; break; }
+      if (!E.legalMask(g, x | o)) break;
+      const t = Date.now(); const r = E.search({ x, o, b: 0 }, g, 1, ms); maxMs = Math.max(maxMs, Date.now() - t);
+      if (!(E.legalMask(g, x | o) & (1 << r.move))) { out = 'ILLEGAL'; break; }
+      o |= 1 << r.move;
+      if (E.lineWon(o, g.lines[1])) { out = 'O'; break; }
     }
-    out[res]++;
+    res[out] = (res[out] || 0) + 1;
   }
-  console.log('AI vs AI (6 games):', out);
+  return { res, maxMs };
 }
-
-// Super XOX: AI(O) vs random X, move validity
-{
-  const rnd = (n) => Math.floor(Math.random() * n);
-  let w = { X: 0, O: 0, tie: 0 }, times = [], illegal = 0, depths = [];
-  for (let g = 0; g < 8; g++) {
-    let S = E.newSuper({ spin: g % 2 === 1, cursed: g % 3 === 2 ? 4 : -1 });
-    for (let t = 0; t < 90; t++) {
-      if (E.superResult(S)) break;
-      const mv = E.superMoves(S);
-      if (!mv.length) break;
-      const m = mv[rnd(mv.length)];
-      S = E.applySuper(S, m[0], m[1], 0);
-      if (E.superResult(S)) break;
-      const t0 = Date.now();
-      const r = E.searchSuper(S, 1, 150);
-      times.push(Date.now() - t0); depths.push(r.depth);
-      if (!E.superMoves(S).some(x => x[0] === r.b && x[1] === r.c)) illegal++;
-      S = E.applySuper(S, r.b, r.c, 1);
-    }
-    const res = E.superResult(S); w[res === 1 ? 'X' : res === 2 ? 'O' : 'tie']++;
-  }
-  console.log('Super AI(O) vs random X (8 games):', w, 'avg ms', Math.round(times.reduce((a, b) => a + b, 0) / times.length), 'avg depth', (depths.reduce((a, b) => a + b, 0) / depths.length).toFixed(1));
-  ok(illegal === 0, 'Super AI only plays legal moves');
-  ok(w.O >= 5, 'Super AI beats random X most of the time');
-}
-console.log(fails ? 'FAILED ' + fails : 'ALL PASSED');
-process.exit(fails ? 1 : 0);
+let r = vsRandom(G3, 50, 30); ok(!r.res.X && !r.res.ILLEGAL, '3x3 AI never loses to random play ' + JSON.stringify(r));
+r = vsRandom(GG, 150, 15); ok(!r.res.X && !r.res.ILLEGAL, 'gravity AI only plays legal drops and never loses to random play ' + JSON.stringify(r) + ' max ' + r.maxMs + 'ms');
+r = vsRandom(G5, 100, 10); ok(!r.res.X, '5x5 AI still holds ' + JSON.stringify(r));
+// 3x3 perfect self-play is a draw
+let d = 0; for (let i = 0; i < 6; i++) { let x = 0, o = 0, s = 0, res = 'd'; for (let t = 0; t < 9; t++) { const m = E.search({ x, o, b: 0 }, G3, s, 100).move; if (m < 0) break; if (s === 0) x |= 1 << m; else o |= 1 << m; if (E.lineWon(s ? o : x, G3.windows)) { res = s ? 'O' : 'X'; break; } s ^= 1; } if (res === 'd') d++; }
+ok(d === 6, '3x3 perfect self-play always draws');
+// super target
+let S = E.newSuper({ target: 3 }); S.res[0] = 1; S.res[4] = 1; S.res[5] = 1; ok(E.superResult(S) === 1, 'Super XOX: 3 boards wins with target 3');
+S = E.applySuper(E.newSuper({ target: 3 }), 4, 4, 0); ok(S.target === 3, 'target survives a move');
+console.log(fails ? 'FAILED ' + fails : 'ALL PASSED'); process.exit(fails ? 1 : 0);

@@ -22,6 +22,7 @@
   --o-soft: rgba(232, 36, 122, .26);
   --hi-soft: rgba(255, 212, 0, .5);
   --blend: multiply;
+  --set-frost: #0B86AE; --set-fire: #D9480F; --set-tempo: #6E36E8; --set-luck: #23883A; --set-guard: #8A6418;
   --f-display: 'Bricolage Grotesque', 'Arial Narrow', 'Helvetica Neue', system-ui, sans-serif;
   --f-body: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --f-mono: 'Spline Sans Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -31,14 +32,14 @@
     --paper: #10142A; --paper2: #1A2040; --ink: #EEF0FF; --ink2: #9CA6D2; --rule: #2C3563;
     --x: #5E88FF; --o: #FF5C9F; --hi: #FFD400;
     --x-soft: rgba(94, 136, 255, .3); --o-soft: rgba(255, 92, 159, .3); --hi-soft: rgba(255, 212, 0, .28);
-    --blend: screen; color-scheme: dark;
+    --blend: screen; color-scheme: dark; --set-frost: #45C4EC; --set-fire: #FF8A4C; --set-tempo: #A880FF; --set-luck: #5CCB6B; --set-guard: #D7AE52;
   }
 }
 :root[data-theme="dark"] {
   --paper: #10142A; --paper2: #1A2040; --ink: #EEF0FF; --ink2: #9CA6D2; --rule: #2C3563;
   --x: #5E88FF; --o: #FF5C9F; --hi: #FFD400;
   --x-soft: rgba(94, 136, 255, .3); --o-soft: rgba(255, 92, 159, .3); --hi-soft: rgba(255, 212, 0, .28);
-  --blend: screen; color-scheme: dark;
+  --blend: screen; color-scheme: dark; --set-frost: #45C4EC; --set-fire: #FF8A4C; --set-tempo: #A880FF; --set-luck: #5CCB6B; --set-guard: #D7AE52;
 }
 
 * { box-sizing: border-box; }
@@ -137,10 +138,13 @@ small { font-size: 13px; }
   background-image: radial-gradient(var(--rule) .9px, transparent 1.1px); background-size: 8px 8px;
 }
 .cell { position: relative; aspect-ratio: 1; min-width: 0; padding: 0; border: 0; background: transparent; cursor: pointer; border-right: 1.5px solid var(--rule); border-bottom: 1.5px solid var(--rule); }
-.board5 .cell:nth-child(5n) { border-right: 0; }
-.board5 .cell:nth-child(n+21) { border-bottom: 0; }
+.board5.w5 .cell:nth-child(5n) { border-right: 0; }
+.board5.w5 .cell:nth-child(n+21) { border-bottom: 0; }
+.board5.w3 .cell:nth-child(3n) { border-right: 0; }
+.board5.w3 .cell:nth-child(n+7) { border-bottom: 0; }
 .cell svg.m { position: absolute; inset: 13%; width: 74%; height: 74%; mix-blend-mode: var(--blend); overflow: visible; }
-.cell svg.m * { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 5; }
+.cell svg.m * { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 4.5; }
+.cell svg.m .f, svg.gl .f { fill: currentColor; stroke: none; }
 .cell.x { color: var(--x); }
 .cell.o { color: var(--o); }
 .cell.x svg.m { filter: drop-shadow(2px 1.5px 0 var(--x-soft)); }
@@ -161,9 +165,8 @@ small { font-size: 13px; }
 .cell i.tag { position: absolute; right: 4px; bottom: 3px; font-family: var(--f-mono); font-style: normal; font-weight: 700; font-size: 10px; letter-spacing: .04em; }
 .cell.ofrom::before { content: ''; position: absolute; inset: 8%; border: 2px dashed var(--x); border-radius: 50%; pointer-events: none; }
 .cell.oto { box-shadow: inset 0 0 0 3px var(--o); }
-.cell.fresh.x svg.m path { stroke-dasharray: 60; stroke-dashoffset: 60; animation: draw .22s ease-out forwards; }
-.cell.fresh.o svg.m circle { stroke-dasharray: 80; stroke-dashoffset: 80; animation: draw .26s ease-out forwards; }
-@keyframes draw { to { stroke-dashoffset: 0; } }
+.cell.fresh svg.m { animation: pop .24s cubic-bezier(.3,1.6,.5,1); }
+@keyframes pop { from { transform: scale(.3); opacity: 0; } }
 .cell:disabled { cursor: default; }
 
 /* Super XOX */
@@ -245,19 +248,101 @@ dl.sum dt { color: var(--ink2); } dl.sum dd { margin: 0; font-family: var(--f-mo
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
-  .cell.fresh.x svg.m path, .cell.fresh.o svg.m circle { stroke-dasharray: none; stroke-dashoffset: 0; }
 }
+
+/* ---------- characters, opponents, sets ---------- */
+svg.gl { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.center { text-align: center; }
+.sub-logo { font-size: 13px; font-weight: 600; letter-spacing: .14em; text-align: center; }
+.where { display: inline-flex; align-items: center; gap: 6px; }
+.me { display: inline-flex; width: 20px; height: 20px; color: var(--x); }
+.me svg { width: 100%; height: 100%; stroke-width: 4.5; }
+
+.car { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 6px; }
+.car-view { overflow: hidden; touch-action: pan-y; cursor: grab; border-radius: 4px; outline-offset: 4px; user-select: none; -webkit-user-select: none; }
+.car-view:active { cursor: grabbing; }
+.car-track { display: flex; transition: transform .32s cubic-bezier(.2,.8,.2,1); will-change: transform; }
+.cc { flex: 0 0 100%; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 18px 12px 20px; border: 2px solid var(--ink); background: var(--paper2); }
+.cc-glyph { position: relative; width: min(46vw, 170px); aspect-ratio: 1; max-width: 100%; color: var(--x); display: grid; place-items: center;
+  background-image: radial-gradient(var(--rule) .9px, transparent 1.1px); background-size: 8px 8px; border: 1.5px solid var(--rule); }
+.cc-glyph svg.gl { width: 72%; height: 72%; stroke-width: 3.6; mix-blend-mode: var(--blend); filter: drop-shadow(3px 2px 0 var(--x-soft)); }
+.cc h3 { font-size: 30px; }
+.cc-trait { font-size: 17px; font-weight: 600; max-width: 26ch; text-wrap: balance; }
+.cc-start { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.mini { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 7px; border: 1.5px solid var(--ink); border-radius: 3px; font-family: var(--f-display); font-weight: 700; font-size: 14px; background: var(--paper); }
+.mini .ic { width: 18px; height: 18px; }
+.cc.locked .cc-glyph { color: var(--ink2); }
+.cc.locked .cc-glyph svg.gl { opacity: .3; filter: none; }
+.cc.locked h3, .cc.locked .cc-start, .cc.locked .cc-set { opacity: .5; }
+.lock { position: absolute; width: 40%; height: 40%; fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+.car-arrow { width: 44px; height: 56px; display: grid; place-items: center; padding: 0; border: 2px solid var(--ink); border-radius: 3px; background: var(--paper); cursor: pointer; box-shadow: 3px 3px 0 var(--rule); }
+.car-arrow svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.car-arrow:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--x); }
+.car-dots { display: flex; justify-content: center; gap: 4px; }
+.car-dots button { width: 32px; height: 32px; padding: 0; border: 0; background: transparent; cursor: pointer; position: relative; }
+.car-dots button::after { content: ''; position: absolute; inset: 11px; border: 2px solid var(--ink2); border-radius: 50%; }
+.car-dots button[aria-current="true"]::after { background: var(--ink); border-color: var(--ink); inset: 10px; }
+@media (max-width: 380px) { .car { grid-template-columns: 36px minmax(0, 1fr) 36px; gap: 4px; } .car-arrow { width: 36px; } }
+
+.set { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border: 1.5px solid var(--set-c); border-radius: 2px; color: var(--ink);
+  background: color-mix(in srgb, var(--set-c) 16%, transparent); font-family: var(--f-mono); font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+.set b { color: var(--set-c); font-weight: 700; letter-spacing: .1em; }
+.s-frost { --set-c: var(--set-frost); } .s-fire { --set-c: var(--set-fire); } .s-tempo { --set-c: var(--set-tempo); } .s-luck { --set-c: var(--set-luck); } .s-guard { --set-c: var(--set-guard); }
+.chip[class*="s-"] { border-color: var(--set-c); background: color-mix(in srgb, var(--set-c) 16%, transparent); }
+.chip.enemy { border-color: var(--o); background: var(--o-soft); }
+.sets { display: flex; flex-direction: column; gap: 6px; }
+.setrow { display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: start; gap: 10px; font-size: 13px; line-height: 1.35; color: var(--ink2); }
+.setrow > div { display: flex; flex-direction: column; gap: 2px; }
+.setrow .set { justify-self: start; }
+.setrow span.on { color: var(--ink); font-weight: 650; }
+.setrow span.on::before { content: '\2713  '; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+.oglyph { width: 44px; height: 44px; flex: none; color: var(--o); display: grid; place-items: center; }
+.oglyph svg { width: 100%; height: 100%; stroke-width: 3.6; }
+.oglyph.big { width: 76px; height: 76px; }
+.card.opp { grid-template-columns: 52px 1fr; border-color: var(--o); }
+.card.opp:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--o); }
+.card.plain { grid-template-columns: 1fr; }
+.foe { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1.5px solid var(--o); background: var(--o-soft); border-radius: 3px; flex-wrap: wrap; }
+.foe .oglyph { width: 34px; height: 34px; }
+.foe .body { flex: 1 1 140px; min-width: 0; }
+.foe h3 { font-size: 17px; }
+.foe .score { flex: none; }
+.score .cx { color: var(--x); } .score .co { color: var(--o); }
+.bosscard { display: flex; gap: 14px; align-items: flex-start; padding: 16px; border: 2px solid var(--o); background: var(--o-soft); border-radius: 3px; }
+.bosscard .body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.bosscard ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 16px; }
+
+.tbar { height: 8px; margin-top: -8px; border: 1.5px solid var(--ink); border-radius: 2px; overflow: hidden; background: var(--paper2); }
+.tbar i { display: block; height: 100%; background: var(--x); transform-origin: left; }
+.tbar.low i { background: var(--o); }
+
+.board5.grav .cell.legal::after { content: ''; position: absolute; left: 50%; bottom: 10%; width: 22%; height: 6%; margin-left: -11%; border-radius: 3px; background: var(--ink2); opacity: .55; }
+.board5.grav { background-image: linear-gradient(to top, var(--x-soft) 0 3px, transparent 3px), radial-gradient(var(--rule) .9px, transparent 1.1px); background-size: 100% 100%, 8px 8px; }
+.board5.quake { animation: quake .45s ease-out; }
+@keyframes quake { 0% { transform: translateY(-14px); } 40% { transform: translateY(4px); } 70% { transform: translateY(-2px); } 100% { transform: none; } }
+.cell i.dot.sm { top: 3px; left: 3px; width: 6px; height: 6px; }
+.sub .cell svg.m * { stroke-width: 5.5; }
+.big.txt { color: var(--ink2); font-family: var(--f-mono); font-size: 12px; }
+
+.relic.static { cursor: default; }
+.relic.off { opacity: .45; }
+.unlock { display: flex; align-items: center; gap: 12px; padding: 10px; border: 2px dashed var(--x); border-radius: 3px; font-size: 16px; }
+.unlock svg { width: 40px; height: 40px; color: var(--x); flex: none; }
+.endhead { display: flex; align-items: center; gap: 14px; }
+.endhead svg { width: 64px; height: 64px; color: var(--x); flex: none; }
+.cc-set { display: flex; align-items: center; gap: 8px; }
 
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
-/* XOX Rogue engine: 5x5 four-in-a-row search AI and Super XOX (ultimate tic-tac-toe). No DOM. */
+/* XOX Rogue engine: one search AI for any k-in-a-row grid (5x5, 3x3, gravity) and Super XOX. No DOM. */
 var XOX = (function () {
   'use strict';
 
-  var N = 5, NC = 25, FULL = (1 << 25) - 1;
   var WIN = 100000;
 
   function pc(x) {
@@ -266,60 +351,53 @@ var XOX = (function () {
     return (((x + (x >>> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24;
   }
 
-  /* ---------- 5x5: lines ---------- */
-  var WINDOWS = (function () {
-    var out = [], dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
-    for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) for (var d = 0; d < 4; d++) {
-      var dr = dirs[d][0], dc = dirs[d][1];
-      var er = r + 3 * dr, ec = c + 3 * dc;
-      if (er < 0 || er >= N || ec < 0 || ec >= N) continue;
+  /* ---------- generic grid games (5x5, 3x3, gravity) ---------- */
+  /* def: {w, h, k, gravity}. extras: extra winning masks for X only. */
+  function makeGame(def, extras) {
+    var w = def.w, h = def.h, k = def.k, nc = w * h, full = (1 << nc) - 1;
+    var win = [], dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
+    for (var r = 0; r < h; r++) for (var c = 0; c < w; c++) for (var d = 0; d < 4; d++) {
+      var er = r + (k - 1) * dirs[d][0], ec = c + (k - 1) * dirs[d][1];
+      if (er < 0 || er >= h || ec < 0 || ec >= w) continue;
       var m = 0;
-      for (var k = 0; k < 4; k++) m |= 1 << ((r + k * dr) * N + c + k * dc);
-      out.push(m);
+      for (var i = 0; i < k; i++) m |= 1 << ((r + i * dirs[d][0]) * w + c + i * dirs[d][1]);
+      win.push(m);
     }
-    return out;
-  })();
-
-  var PATTERNS = {
-    corners: (1 << 0) | (1 << 4) | (1 << 20) | (1 << 24),
-    plus: (1 << 12) | (1 << 7) | (1 << 17) | (1 << 11) | (1 << 13)
-  };
-
-  function cellLines(lines) {
+    var lx = win.concat(extras || []);
+    var cr = (h - 1) / 2, cc = (w - 1) / 2, center = [];
+    for (var j = 0; j < nc; j++) center.push(Math.round((cr + cc) - (Math.abs(Math.floor(j / w) - cr) + Math.abs(j % w - cc))));
+    return { w: w, h: h, k: k, nc: nc, full: full, gravity: !!def.gravity, windows: win, lines: [lx, win], cl: [cellLines(lx, nc), cellLines(win, nc)], center: center };
+  }
+  function cellLines(lines, nc) {
     var cl = [];
-    for (var c = 0; c < NC; c++) {
-      var a = [];
-      for (var i = 0; i < lines.length; i++) if (lines[i] & (1 << c)) a.push(lines[i]);
-      cl.push(a);
-    }
+    for (var c = 0; c < nc; c++) { var a = []; for (var i = 0; i < lines.length; i++) if (lines[i] & (1 << c)) a.push(lines[i]); cl.push(a); }
     return cl;
   }
-
-  /* extras: extra winning patterns (bit masks) for X only */
-  function makeRules(extras) {
-    var lx = WINDOWS.concat(extras || []);
-    return { lines: [lx, WINDOWS], cl: [cellLines(lx), cellLines(WINDOWS)] };
+  function patterns(g) {
+    var w = g.w, h = g.h, out = { corners: (1 << 0) | (1 << (w - 1)) | (1 << ((h - 1) * w)) | (1 << (g.nc - 1)), plus: 0 };
+    if (w % 2 && h % 2) { var c = ((h - 1) / 2) * w + (w - 1) / 2; out.plus = (1 << c) | (1 << (c - w)) | (1 << (c + w)) | (1 << (c - 1)) | (1 << (c + 1)); }
+    return out;
   }
-
+  /* squares a mark may go on now: any empty square, or the lowest empty square of each column with gravity */
+  function legalMask(g, occ) {
+    var free = g.full & ~occ;
+    if (!g.gravity) return free;
+    var m = 0;
+    for (var c = 0; c < g.w; c++) for (var r = g.h - 1; r >= 0; r--) { var b = 1 << (r * g.w + c); if (!(occ & b)) { m |= b; break; } }
+    return m;
+  }
   function lineWon(mask, lines) {
     for (var i = 0; i < lines.length; i++) if ((mask & lines[i]) === lines[i]) return lines[i];
     return 0;
   }
 
-  /* ---------- 5x5: search ---------- */
-  var CENTER = [];
-  for (var ci = 0; ci < NC; ci++) {
-    var rr = Math.floor(ci / N), cc = ci % N;
-    CENTER.push(4 - (Math.abs(rr - 2) + Math.abs(cc - 2)));
-  }
   var W = [0, 1, 5, 25, 120, 0];
 
-  /* st: {x,o,b,ban}. side: 0 = X, 1 = O (the side to move at the root).
-     ban = cells only X may use. Returns {move, score, depth, nodes}. */
-  function search5(st, rules, side, timeMs, opts) {
+  /* st: {x, o, b}. side 0 = X, 1 = O to move. Returns {move, score, depth, nodes, forced}. */
+  function search(st, g, side, timeMs, opts) {
     opts = opts || {};
-    var lines = rules.lines, cl = rules.cl;
-    var blocked = st.b | 0, ban = st.ban | 0;
+    var lines = g.lines, cl = g.cl, NC = g.nc, CENTER = g.center;
+    var blocked = st.b | 0;
     var maxDepth = opts.maxDepth || 40;
     var deadline = Date.now() + timeMs;
     var nodes = 0, aborted = false;
@@ -350,26 +428,22 @@ var XOX = (function () {
       arr.sort(function (p, q) { return q.h - p.h; });
       return arr;
     }
-
     function nm(mx, mo, s, d, alpha, beta, ply) {
       if ((++nodes & 2047) === 0 && Date.now() > deadline) aborted = true;
       if (aborted) return 0;
       var me = s === 0 ? mx : mo, op = s === 0 ? mo : mx;
-      var occ = mx | mo | blocked;
-      var availMe = FULL & ~occ; if (s === 1) availMe &= ~ban;
-      var availOp = FULL & ~occ; if (s === 0) availOp &= ~ban;
-      if (availMe === 0) return 0;
+      var avail = legalMask(g, mx | mo | blocked);
+      if (avail === 0) return 0;
       var c;
-      for (c = 0; c < NC; c++) if ((availMe & (1 << c)) && wins(me, c, s)) return WIN - ply;
+      for (c = 0; c < NC; c++) if ((avail & (1 << c)) && wins(me, c, s)) return WIN - ply;
       var threats = 0, tcount = 0;
-      for (c = 0; c < NC; c++) if ((availOp & (1 << c)) && wins(op, c, s ^ 1)) { threats |= 1 << c; tcount++; }
+      for (c = 0; c < NC; c++) if ((avail & (1 << c)) && wins(op, c, s ^ 1)) { threats |= 1 << c; tcount++; }
       var forced = -1;
       if (tcount > 0) {
-        if (tcount > 1 || (threats & availMe) === 0) return -(WIN - ply - 1);
+        if (tcount > 1) return -(WIN - ply - 1);
         forced = 31 - Math.clz32(threats);
       }
       if (d <= 0) { var e = evalX(mx, mo); return s === 0 ? e : -e; }
-
       var key = (mx * 33554432 + mo) * 2 + s;
       var ent = tt.get(key), ttMove = -1;
       if (ent) {
@@ -380,7 +454,7 @@ var XOX = (function () {
           if (ent.f === 2 && ent.v <= alpha) return ent.v;
         }
       }
-      var moves = forced >= 0 ? [{ c: forced }] : orderedMoves(availMe, me, op, s, ttMove);
+      var moves = forced >= 0 ? [{ c: forced }] : orderedMoves(avail, me, op, s, ttMove);
       var best = -Infinity, bestM = -1, a0 = alpha;
       for (var i = 0; i < moves.length; i++) {
         c = moves[i].c;
@@ -397,15 +471,13 @@ var XOX = (function () {
 
     var mx0 = st.x | 0, mo0 = st.o | 0;
     var me0 = side === 0 ? mx0 : mo0, op0 = side === 0 ? mo0 : mx0;
-    var occ0 = mx0 | mo0 | blocked;
-    var avail0 = FULL & ~occ0; if (side === 1) avail0 &= ~ban;
-    var availOp0 = FULL & ~occ0; if (side === 0) availOp0 &= ~ban;
+    var avail0 = legalMask(g, mx0 | mo0 | blocked);
     if (avail0 === 0) return { move: -1, score: 0, depth: 0, nodes: 0 };
     var c0;
     for (c0 = 0; c0 < NC; c0++) if ((avail0 & (1 << c0)) && wins(me0, c0, side)) return { move: c0, score: WIN, depth: 1, nodes: 1 };
     var thr = [];
-    for (c0 = 0; c0 < NC; c0++) if ((availOp0 & (1 << c0)) && wins(op0, c0, side ^ 1)) thr.push(c0);
-    if (thr.length === 1 && (avail0 & (1 << thr[0]))) return { move: thr[0], score: 0, depth: 1, nodes: 1, forced: true };
+    for (c0 = 0; c0 < NC; c0++) if ((avail0 & (1 << c0)) && wins(op0, c0, side ^ 1)) thr.push(c0);
+    if (thr.length === 1) return { move: thr[0], score: 0, depth: 1, nodes: 1, forced: true };
 
     var roots = orderedMoves(avail0, me0, op0, side, -1);
     var result = { move: roots[0].c, score: 0, depth: 0, nodes: 0 };
@@ -426,6 +498,7 @@ var XOX = (function () {
       scores.sort(function (p, q) { return q.v - p.v; });
       roots = scores.map(function (o) { return { c: o.c }; });
       if (Math.abs(bestScore) >= WIN - 60) break;
+      if (depth >= NC) break;
       if (Date.now() > deadline) break;
     }
     result.nodes = nodes;
@@ -450,12 +523,12 @@ var XOX = (function () {
       bx: new Int16Array(9), bo: new Int16Array(9), res: new Int8Array(9),
       next: -1, ply: 0,
       cursed: opts.cursed === undefined ? -1 : opts.cursed,
-      spin: !!opts.spin
+      spin: !!opts.spin, target: opts.target || 0
     };
   }
 
   function cloneSuper(S) {
-    return { bx: S.bx.slice(), bo: S.bo.slice(), res: S.res.slice(), next: S.next, ply: S.ply, cursed: S.cursed, spin: S.spin };
+    return { bx: S.bx.slice(), bo: S.bo.slice(), res: S.res.slice(), next: S.next, ply: S.ply, cursed: S.cursed, spin: S.spin, target: S.target };
   }
 
   function rotateSuper(S) {
@@ -464,7 +537,7 @@ var XOX = (function () {
       var j = ROT[i];
       bx[j] = ROT9[S.bx[i]]; bo[j] = ROT9[S.bo[i]]; res[j] = S.res[i];
     }
-    return { bx: bx, bo: bo, res: res, next: S.next >= 0 ? ROT[S.next] : -1, ply: S.ply, cursed: S.cursed >= 0 ? ROT[S.cursed] : -1, spin: S.spin };
+    return { bx: bx, bo: bo, res: res, next: S.next >= 0 ? ROT[S.next] : -1, ply: S.ply, cursed: S.cursed >= 0 ? ROT[S.cursed] : -1, spin: S.spin, target: S.target };
   }
 
   /* returns new state; T.rotated tells the caller the grid turned. side: 0 = X, 1 = O */
@@ -477,7 +550,7 @@ var XOX = (function () {
     var cursedVoid = false;
     if (b === S.cursed && r === 2) { r = 3; cursedVoid = true; }
     res[b] = r;
-    var T = { bx: bx, bo: bo, res: res, next: res[c] === 0 ? c : -1, ply: S.ply + 1, cursed: S.cursed, spin: S.spin };
+    var T = { bx: bx, bo: bo, res: res, next: res[c] === 0 ? c : -1, ply: S.ply + 1, cursed: S.cursed, spin: S.spin, target: S.target };
     T.won = r === 1 || r === 2 ? b : -1;
     T.cursedVoid = cursedVoid;
     T.rotated = false;
@@ -497,6 +570,7 @@ var XOX = (function () {
     }
     if (hasLine3(mx)) return 1;
     if (hasLine3(mo)) return 2;
+    if (S.target) { if (nx >= S.target) return 1; if (no >= S.target) return 2; }
     if (open === 0) return nx > no ? 1 : (no > nx ? 2 : 3);
     return 0;
   }
@@ -620,120 +694,153 @@ var XOX = (function () {
   }
 
   var api = {
-    N: N, NC: NC, FULL: FULL, WIN: WIN, WINDOWS: WINDOWS, PATTERNS: PATTERNS, pc: pc,
-    makeRules: makeRules, lineWon: lineWon, search5: search5,
-    L3: L3, ROT: ROT, ROT9: ROT9, newSuper: newSuper, cloneSuper: cloneSuper, rotateSuper: rotateSuper,
+    WIN: WIN, pc: pc, makeGame: makeGame, patterns: patterns, legalMask: legalMask, lineWon: lineWon, search: search,
+    L3: L3, ROT: ROT, ROT9: ROT9, hasLine3: hasLine3, newSuper: newSuper, cloneSuper: cloneSuper, rotateSuper: rotateSuper,
     applySuper: applySuper, superResult: superResult, superMoves: superMoves, searchSuper: searchSuper, evalSuper: evalSuper
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   return api;
 })();
 
-/* XOX Rogue run logic: relics, matches, run flow. No DOM. Needs XOX (engine.js).
-   Relics are deliberately simple: automatic perks, one-tap buttons with no aiming, and plain bonuses. */
+/* XOX Rogue run logic: characters, relic sets, named opponents, three boss games. No DOM. Needs XOX (engine.js).
+   Every relic works in every game: they act on turns and marks, not on a specific board. */
 var Game = (function (E) {
   'use strict';
 
-  var cfg = { aiMs5: 350, aiMsBoss: 600, hintMs: 250, rng: Math.random };
+  var cfg = { aiMs: [200, 300, 400], aiMsBoss: [80, 300, 600], hintMs: 250, rng: Math.random };
   function rnd(n) { return Math.floor(cfg.rng() * n); }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rnd(i + 1), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function pick(a) { return a.length ? a[rnd(a.length)] : -1; }
   function BIT(i) { return 1 << i; }
+  function bits(mask, n) { var a = []; for (var i = 0; i < n; i++) if (mask & (1 << i)) a.push(i); return a; }
   function has(run, id) { return run.relics.indexOf(id) >= 0; }
   function copy(o) { return JSON.parse(JSON.stringify(o)); }
 
   /* ---------- content ---------- */
-  var RELICS = {
-    freeze:     { name: 'Freeze', kind: 'active', charges: 1, price: 6, desc: 'AI skips its next turn.' },
-    zap:        { name: 'Zap', kind: 'active', charges: 1, price: 4, desc: "Delete the AI's last mark." },
-    nuke:       { name: 'Nuke', kind: 'active', charges: 1, price: 8, desc: 'Wipe every AI mark.' },
-    hint:       { name: 'Hint', kind: 'active', charges: 2, price: 3, desc: 'Shows your best move.' },
-    rewind:     { name: 'Rewind', kind: 'active', charges: 1, price: 4, desc: 'Undo the last round.' },
-    center:     { name: 'Center Start', kind: 'passive', price: 7, desc: 'Start with the center.' },
-    freebie:    { name: 'Freebie', kind: 'passive', price: 4, desc: 'Start with 2 free marks.' },
-    strike:     { name: 'Double Strike', kind: 'passive', price: 6, desc: 'Every 3rd turn, place 2.' },
-    sleepy:     { name: 'Sleepy AI', kind: 'passive', price: 7, desc: 'AI skips every 4th turn.' },
-    corners:    { name: 'Four Corners', kind: 'passive', price: 6, desc: 'All 4 corners win.' },
-    plus:       { name: 'Plus Sign', kind: 'passive', price: 5, desc: 'Center + 4 sides win.' },
-    safetynet:  { name: 'Lucky Draw', kind: 'passive', price: 5, desc: 'First draw each act wins.' },
-    heartup:    { name: 'Heart Up', kind: 'passive', price: 5, desc: '+1 heart.' },
-    ironheart:  { name: 'Iron Heart', kind: 'passive', price: 5, desc: 'Block 1 hit per act.' },
-    secondlife: { name: 'Second Life', kind: 'passive', price: 8, desc: 'Survive one defeat.' },
-    piggy:      { name: 'Piggy Bank', kind: 'passive', price: 4, desc: '+2 gold per win.' },
-    haggler:    { name: 'Haggler', kind: 'passive', price: 3, desc: 'Shop prices −1.' },
-    battery:    { name: 'Battery', kind: 'passive', price: 8, desc: 'Buttons get +1 use.' }
+  var SETS = {
+    frost: { name: 'Frost', b2: 'Skipped AI turns pay 1 gold.', b3: 'AI skips its first turn.' },
+    fire:  { name: 'Fire', b2: 'Burned squares turn to stone.', b3: 'Zap and Nuke refill each match.' },
+    tempo: { name: 'Tempo', b2: 'Double Strike every 2nd turn.', b3: 'Start with 1 more mark.' },
+    luck:  { name: 'Luck', b2: 'Shops show 4 items.', b3: 'First buy in each shop is free.' },
+    guard: { name: 'Guard', b2: '+1 max heart.', b3: 'Heal 1 heart after each win.' }
   };
-  var STARTERS = ['freeze', 'center', 'strike'];
+  var RELICS = {
+    freeze:      { name: 'Freeze', set: 'frost', kind: 'active', charges: 1, price: 6, desc: 'AI skips its next turn.' },
+    sleepy:      { name: 'Sleepy AI', set: 'frost', kind: 'passive', price: 7, desc: 'AI skips every 4th turn.' },
+    brainfreeze: { name: 'Brain Freeze', set: 'frost', kind: 'passive', price: 4, desc: "AI's first move is random." },
+    zap:         { name: 'Zap', set: 'fire', kind: 'active', charges: 1, price: 4, desc: "Delete the AI's last mark." },
+    nuke:        { name: 'Nuke', set: 'fire', kind: 'active', charges: 1, price: 8, desc: 'Wipe every AI mark.' },
+    spark:       { name: 'Spark', set: 'fire', kind: 'passive', price: 5, desc: 'Every 5th turn, burn one.' },
+    strike:      { name: 'Double Strike', set: 'tempo', kind: 'passive', price: 6, desc: 'Every 3rd turn, place 2.' },
+    freebie:     { name: 'Freebie', set: 'tempo', kind: 'passive', price: 4, desc: 'Start with 2 free marks.' },
+    center:      { name: 'Center Start', set: 'tempo', kind: 'passive', price: 7, desc: 'Start with the center.' },
+    safetynet:   { name: 'Lucky Draw', set: 'luck', kind: 'passive', price: 5, desc: 'First draw each act wins.' },
+    piggy:       { name: 'Piggy Bank', set: 'luck', kind: 'passive', price: 4, desc: '+2 gold per win.' },
+    haggler:     { name: 'Haggler', set: 'luck', kind: 'passive', price: 3, desc: 'Shop prices −1.' },
+    heartup:     { name: 'Heart Up', set: 'guard', kind: 'passive', price: 5, desc: '+1 heart.' },
+    ironheart:   { name: 'Iron Heart', set: 'guard', kind: 'passive', price: 5, desc: 'Block 1 hit per act.' },
+    secondlife:  { name: 'Second Life', set: 'guard', kind: 'passive', price: 8, desc: 'Survive one defeat.' },
+    hint:        { name: 'Hint', set: null, kind: 'active', charges: 2, price: 3, desc: 'Shows your best move.' },
+    rewind:      { name: 'Rewind', set: null, kind: 'active', charges: 1, price: 4, desc: 'Undo the last round.' },
+    corners:     { name: 'Four Corners', set: null, kind: 'passive', price: 6, desc: 'All 4 corners win.', only: 'grid' },
+    plus:        { name: 'Plus Sign', set: null, kind: 'passive', price: 5, desc: 'Center + 4 sides win.', only: 'grid' },
+    battery:     { name: 'Battery', set: null, kind: 'passive', price: 8, desc: 'Buttons get +1 use.' }
+  };
+  var CHARS = {
+    frost:  { name: 'Frost', set: 'frost', start: ['freeze'], trait: 'Freeze gets +1 use.', unlock: null },
+    ember:  { name: 'Ember', set: 'fire', start: ['spark'], trait: 'Every 4th mark burns a neighbor.', unlock: null },
+    thief:  { name: 'Thief', set: 'luck', start: ['zap', 'piggy'], trait: 'Zap steals the mark instead.', unlock: 'Beat the Act 1 boss' },
+    twin:   { name: 'Twin', set: 'tempo', start: ['strike'], trait: 'Every 4th mark lands twice.', unlock: 'Beat the Act 2 boss' },
+    knight: { name: 'Knight', set: 'guard', start: ['center', 'ironheart'], trait: 'Starts with 4 hearts.', unlock: 'Win a run' }
+  };
+  var CHAR_ORDER = ['frost', 'ember', 'thief', 'twin', 'knight'];
 
-  var TRICKS = {
-    overplay:    { name: 'Overplay', desc: 'Play twice in a row.' },
-    freepass:    { name: 'Free Pass', desc: 'Play on any board.' },
-    castingvote: { name: 'Casting Vote', desc: 'Tied boards? You win.' },
-    sneak:       { name: 'Sneak Attack', desc: 'Boss skips its first move.' }
+  var OPPONENTS = {
+    copycat: { name: 'The Copycat', act: 1, desc: 'Copies your moves.' },
+    gambler: { name: 'The Gambler', act: 1, desc: 'Every 3rd move is random.' },
+    napper:  { name: 'The Napper', act: 1, desc: 'Naps, then plays twice.' },
+    hoarder: { name: 'The Hoarder', act: 2, desc: 'Drops stones every 3rd turn.' },
+    bully:   { name: 'The Bully', act: 2, desc: 'Starts with 2 marks.' },
+    mason:   { name: 'The Mason', act: 2, desc: 'Starts with 3 stones.' },
+    sniper:  { name: 'The Sniper', act: 3, desc: 'Opens with two marks.' },
+    janitor: { name: 'The Janitor', act: 3, desc: 'Erases your oldest mark.' },
+    warden:  { name: 'The Warden', act: 3, desc: 'Your first button fizzles.' }
   };
   var BOSSES = [
-    { id: 'opener', name: 'The Opener', twist: 'opener', blurb: 'Plays two marks on its first turn.' },
-    { id: 'spinner', name: 'The Spinner', twist: 'spin', blurb: 'The grid turns 90° every 4 moves.' },
-    { id: 'curse', name: 'The Curse', twist: 'curse', blurb: 'One board is cursed. Winning it costs you a heart.' }
+    { id: 'referee', name: 'The Referee', game: 'speed', title: 'Speed Round', rules: ['Best of 3 on a 3×3 board.', '8 seconds per move.', 'Your buttons refill each round.'] },
+    { id: 'avalanche', name: 'The Avalanche', game: 'gravity', title: 'Gravity', rules: ['Marks drop to the bottom.', 'Every 6 moves the floor falls away.', 'Four in a row wins.'] },
+    { id: 'grandmaster', name: 'The Grandmaster', game: 'super', title: 'Super XOX', rules: ['Win 3 small boards to win.', 'Your square sends it to that board.', 'It gets stronger as you win boards.'] }
   ];
-  var COUNTERS = {
-    head:    { name: 'Head Start', desc: 'AI starts with a mark.' },
-    dead:    { name: 'Dead Center', desc: 'The center is blocked.' },
-    rubble:  { name: 'Rubble', desc: 'Two squares are blocked.' },
-    silence: { name: 'Gag Order', desc: 'Your first button fizzles.' },
-    quick:   { name: 'Quick Draw', desc: 'AI plays two marks first.' }
-  };
+  var GAMES = { std: { w: 5, h: 5, k: 4 }, speed: { w: 3, h: 3, k: 3 }, gravity: { w: 5, h: 5, k: 4, gravity: true } };
+
+  /* ---------- sets and charges ---------- */
+  function setCount(run, set) { var n = 0; run.relics.forEach(function (id) { if (RELICS[id].set === set) n++; }); return n; }
+  function setLevels(run) { var o = {}; Object.keys(SETS).forEach(function (k) { o[k] = setCount(run, k); }); return o; }
+  function maxCharges(run, id) {
+    var r = RELICS[id]; if (!r || r.kind !== 'active') return 0;
+    return r.charges + (has(run, 'battery') ? 1 : 0) + (run.char === 'frost' && id === 'freeze' ? 1 : 0);
+  }
+  function refill(run) {
+    run.charges = {};
+    run.relics.forEach(function (id) { if (RELICS[id].kind === 'active') run.charges[id] = maxCharges(run, id); });
+  }
 
   /* ---------- run ---------- */
   function newRun() {
     return {
-      v: 2, phase: 'title', act: 1, idx: 0, hearts: 3, maxHearts: 3, gold: 0,
-      relics: [], charges: {}, counters: [], used: { safety: false, thick: false, life: false },
-      trick: null, trickChoices: [], shop: [], reward: [], starters: STARTERS.slice(),
+      v: 3, phase: 'title', act: 1, idx: 0, hearts: 3, maxHearts: 3, gold: 0, char: null,
+      relics: [], charges: {}, used: { safety: false, thick: false, life: false },
+      choices: [], faced: [], shop: [], reward: [], freeBuy: false,
       match: null, result: null, over: null,
       stats: { wins: 0, draws: 0, losses: 0, bossWins: 0, matches: 0 }
     };
   }
-  function startRun() { var r = newRun(); r.phase = 'starter'; return r; }
+  function startRun() { var r = newRun(); r.phase = 'char'; return r; }
 
   function gain(run, id) {
-    if (has(run, id)) return;
+    if (has(run, id) || !RELICS[id]) return;
+    var before = RELICS[id].set ? setCount(run, RELICS[id].set) : 0;
     run.relics.push(id);
-    var r = RELICS[id];
-    if (r.kind === 'active') run.charges[id] = r.charges + (has(run, 'battery') ? 1 : 0);
+    if (RELICS[id].kind === 'active') run.charges[id] = maxCharges(run, id);
     if (id === 'battery') Object.keys(run.charges).forEach(function (k) { run.charges[k]++; });
     if (id === 'heartup') { run.maxHearts++; run.hearts = Math.min(run.maxHearts, run.hearts + 1); }
+    if (RELICS[id].set === 'guard' && before === 1) { run.maxHearts++; run.hearts++; }
   }
-  function refill(run) {
-    run.charges = {};
-    run.relics.forEach(function (id) {
-      var r = RELICS[id];
-      if (r.kind === 'active') run.charges[id] = r.charges + (has(run, 'battery') ? 1 : 0);
-    });
+  function pickChar(run, id) {
+    if (!CHARS[id] || run.phase !== 'char') return;
+    run.char = id;
+    if (id === 'knight') { run.maxHearts = 4; run.hearts = 4; }
+    CHARS[id].start.forEach(function (r) { gain(run, r); });
+    run.act = 1; run.idx = 0;
+    setupBriefing(run);
   }
-  function pickStarter(run, id) {
-    if (run.starters.indexOf(id) < 0) return;
-    gain(run, id);
-    run.counters = []; run.trick = null; run.idx = 0; run.act = 1;
+  function setupBriefing(run) {
+    run.match = null; run.result = null;
+    if (run.idx < 3) {
+      var pool = Object.keys(OPPONENTS).filter(function (k) { return OPPONENTS[k].act === run.act && run.faced.indexOf(k) < 0; });
+      if (pool.length < 2) pool = Object.keys(OPPONENTS).filter(function (k) { return OPPONENTS[k].act === run.act; });
+      run.choices = shuffle(pool).slice(0, 2);
+    } else run.choices = [];
     run.phase = 'briefing';
   }
-  function rollCounters(act) {
-    if (act <= 1) return [];
-    var pool = ['head', 'dead', 'rubble', 'silence'];
-    if (act >= 3) pool.push('quick');
-    return shuffle(pool).slice(0, act === 2 ? 1 : 2);
-  }
-  function offer(run, n) {
+  /* shop and reward offers lean toward your character's set */
+  function offer(run, n, favorSet) {
     var pool = Object.keys(RELICS).filter(function (id) { return !has(run, id); });
-    return shuffle(pool).slice(0, n);
+    var out = [], lean = pool.filter(function (id) { return RELICS[id].set === favorSet; });
+    if (lean.length) out.push(pick(lean));
+    shuffle(pool).forEach(function (id) { if (out.length < n && out.indexOf(id) < 0) out.push(id); });
+    return shuffle(out);
   }
-  function priceOf(run, id) { return Math.max(1, RELICS[id].price - (has(run, 'haggler') ? 1 : 0)); }
+  function priceOf(run, id) {
+    if (run.freeBuy) return 0;
+    return Math.max(1, RELICS[id].price - (has(run, 'haggler') ? 1 : 0));
+  }
   function healPrice(run) { return Math.max(1, 4 - (has(run, 'haggler') ? 1 : 0)); }
-
   function buy(run, id) {
     if (run.phase !== 'shop' || run.shop.indexOf(id) < 0) return 'Not for sale.';
     var p = priceOf(run, id);
     if (run.gold < p) return 'Not enough gold.';
-    run.gold -= p; gain(run, id); run.shop.splice(run.shop.indexOf(id), 1);
+    run.gold -= p; run.freeBuy = false; gain(run, id); run.shop.splice(run.shop.indexOf(id), 1);
     return 'Bought ' + RELICS[id].name + '.';
   }
   function heal(run) {
@@ -748,155 +855,235 @@ var Game = (function (E) {
     if (run.phase !== 'reward' || run.reward.indexOf(id) < 0) return;
     gain(run, id); advance(run);
   }
-  function chooseTrick(run, id) { if (run.trickChoices.indexOf(id) >= 0) run.trick = id; }
-
   function advance(run) {
-    run.match = null; run.result = null;
     if (run.idx === 3) {
-      if (run.act === 3) { run.over = 'won'; run.phase = 'end'; return; }
+      if (run.act === 3) { run.over = 'won'; run.phase = 'end'; run.match = null; return; }
       run.act++; run.idx = 0; run.used.safety = false; run.used.thick = false; refill(run);
     } else run.idx++;
-    run.counters = run.idx < 3 ? rollCounters(run.act) : [];
-    run.trick = null;
-    run.trickChoices = run.idx === 3 ? shuffle(Object.keys(TRICKS)).slice(0, 3) : [];
-    run.phase = 'briefing';
+    setupBriefing(run);
   }
-
   function next(run) {
     if (run.phase !== 'result') return;
     var out = run.result;
     if (run.hearts <= 0) { run.over = 'dead'; run.phase = 'end'; run.match = null; return; }
-    if (out.boss) {
-      if (out.outcome === 'win') { run.reward = offer(run, 3); run.match = null; run.phase = 'reward'; return; }
-      advance(run); return;
+    if (out.boss && out.outcome === 'win') {
+      if (run.act === 3) { run.over = 'won'; run.phase = 'end'; run.match = null; return; }
+      run.reward = offer(run, 3, CHARS[run.char].set); run.match = null; run.phase = 'reward'; return;
     }
-    if (out.outcome === 'win') { run.shop = offer(run, 3); run.match = null; run.phase = 'shop'; return; }
+    if (!out.boss && out.outcome === 'win') {
+      run.shop = offer(run, setCount(run, 'luck') >= 2 ? 4 : 3, CHARS[run.char].set);
+      run.freeBuy = setCount(run, 'luck') >= 3;
+      run.match = null; run.phase = 'shop'; return;
+    }
     advance(run);
   }
-
-  function startMatch(run) {
+  function startMatch(run, oppId) {
     if (run.phase !== 'briefing') return null;
-    if (run.idx === 3) { if (!run.trick) return null; run.match = newMatchBoss(run); }
-    else run.match = newMatch5(run);
+    if (run.idx < 3) {
+      if (run.choices.indexOf(oppId) < 0) return null;
+      run.faced.push(oppId);
+      run.match = newGrid(run, 'std', oppId);
+    } else {
+      var boss = BOSSES[run.act - 1];
+      run.match = boss.game === 'super' ? newSuperMatch(run, boss) : newGrid(run, boss.game, boss.id);
+    }
     run.phase = 'match';
     return run.match;
   }
 
+  /* ---------- resolve ---------- */
   function resolve(run) {
     var m = run.match, act = run.act;
-    var out = { boss: m.kind === 'boss', outcome: null, gold: 0, hearts: 0, bonuses: [], notes: [], absorbed: 0 };
+    var out = { boss: !!m.boss, outcome: null, gold: 0, hearts: 0, bonuses: [], notes: [], unlock: null };
     var o = m.over;
-    if (m.kind === '5') {
-      if (o === 'draw' && has(run, 'safetynet') && !run.used.safety) { run.used.safety = true; o = 'win'; out.notes.push('Lucky Draw turns the draw into a win.'); }
-      out.outcome = o;
-      if (o === 'win') {
-        out.gold = 3;
-        if (has(run, 'piggy')) { out.gold += 2; out.bonuses.push(['Piggy Bank', 2]); }
-        if (m.xTurns <= 6 && m.over === 'win') { out.gold += 2; out.bonuses.push(['Quick win', 2]); }
-        if (!m.usedRelic && m.over === 'win') { out.gold += 2; out.bonuses.push(['No buttons used', 2]); }
-      } else if (o === 'draw') out.hearts = act === 1 ? 0 : 1;
-      else out.hearts = act === 1 ? 1 : 2;
-    } else {
-      var oBoards = 0; for (var i = 0; i < 9; i++) if (m.S.res[i] === 2) oBoards++;
-      out.outcome = o;
-      if (o === 'win') {
-        out.gold = 6;
-        if (has(run, 'piggy')) { out.gold += 2; out.bonuses.push(['Piggy Bank', 2]); }
-      } else if (o === 'draw') out.hearts = 1;
-      else out.hearts = Math.max(1, Math.min(2, oBoards));
-      if (m.curseHearts > 0) { out.hearts += m.curseHearts; out.notes.push('The curse costs you ' + m.curseHearts + (m.curseHearts > 1 ? ' hearts.' : ' heart.')); }
-    }
-    if (out.hearts > 0 && has(run, 'ironheart') && !run.used.thick) {
-      run.used.thick = true; out.hearts--; out.absorbed = 1; out.notes.push('Iron Heart blocks one heart.');
-    }
+    if (!m.boss && o === 'draw' && has(run, 'safetynet') && !run.used.safety) { run.used.safety = true; o = 'win'; out.notes.push('Lucky Draw turns the draw into a win.'); }
+    out.outcome = o;
+    if (o === 'win') {
+      out.gold = m.boss ? 6 : 2 + act;
+      if (has(run, 'piggy')) { out.gold += 2; out.bonuses.push(['Piggy Bank', 2]); }
+      if (!m.boss && m.xTurns <= 6 && m.over === 'win') { out.gold += 2; out.bonuses.push(['Quick win', 2]); }
+      if (!m.boss && !m.usedRelic && m.over === 'win') { out.gold += 2; out.bonuses.push(['No buttons used', 2]); }
+      if (m.boss) { out.unlock = ['thief', 'twin', 'knight'][act - 1]; run.stats.bossWins++; }
+    } else if (o === 'draw') out.hearts = (!m.boss && act === 1) ? 0 : 1;
+    else out.hearts = (!m.boss && act === 1) ? 1 : 2;
+    if (m.skips && setCount(run, 'frost') >= 2) { out.gold += m.skips; out.bonuses.push(['Frost: skipped turns', m.skips]); }
+    if (out.hearts > 0 && has(run, 'ironheart') && !run.used.thick) { run.used.thick = true; out.hearts--; out.notes.push('Iron Heart blocks one heart.'); }
     run.hearts = Math.max(0, run.hearts - out.hearts);
-    if (run.hearts <= 0 && has(run, 'secondlife') && !run.used.life) {
-      run.used.life = true; run.hearts = 1; out.notes.push('Second Life saves you with 1 heart.');
-    }
+    if (run.hearts <= 0 && has(run, 'secondlife') && !run.used.life) { run.used.life = true; run.hearts = 1; out.notes.push('Second Life saves you with 1 heart.'); }
+    if (o === 'win' && setCount(run, 'guard') >= 3 && run.hearts < run.maxHearts) { run.hearts++; out.notes.push('Guard heals 1 heart.'); }
     run.gold += out.gold;
     run.stats.matches++;
-    if (out.outcome === 'win') { run.stats.wins++; if (out.boss) run.stats.bossWins++; }
-    else if (out.outcome === 'draw') run.stats.draws++; else run.stats.losses++;
-    if (m.kind === '5') run.charges = copy(m.charges);
-    else ['rewind', 'hint'].forEach(function (k) { if (m.charges[k] !== undefined) run.charges[k] = m.charges[k]; });
+    if (o === 'win') run.stats.wins++; else if (o === 'draw') run.stats.draws++; else run.stats.losses++;
+    var keep = copy(m.baseCharges || m.charges);
+    if (m.game !== 'speed') keep = copy(m.charges);
+    if (setCount(run, 'fire') >= 3) ['zap', 'nuke'].forEach(function (k) { if (keep[k] !== undefined) keep[k] = maxCharges(run, k); });
+    run.charges = keep;
     run.result = out; run.phase = 'result';
     return out;
   }
 
-  /* ---------- 5x5 match ---------- */
-  function rulesFor(run) {
-    var ex = [];
-    if (has(run, 'corners')) ex.push(E.PATTERNS.corners);
-    if (has(run, 'plus')) ex.push(E.PATTERNS.plus);
-    return E.makeRules(ex);
-  }
-  function emptyAt(m, c) { return !((m.x | m.o | m.b) & BIT(c)); }
-  function countEmpty(m) { var n = 0; for (var c = 0; c < 25; c++) if (emptyAt(m, c)) n++; return n; }
-  function hasCharge(m, id) { return (m.charges[id] || 0) > 0; }
-  function randEmpty(m, n, skip) {
-    var a = []; for (var c = 0; c < 25; c++) if (c !== skip && emptyAt(m, c)) a.push(c);
-    return shuffle(a).slice(0, n);
-  }
-  function addAIMark(m, c) { m.o |= BIT(c); m.aiMarks++; m.lastAI = c; }
-
-  var SNAP_KEYS = ['x', 'o', 'b', 'xTurns', 'aiMarks', 'silenceLeft', 'quickLeft', 'lastAI', 'freeze', 'aiDue', 'bonus', 'hint'];
-  function snap5(m) { var s = { charges: copy(m.charges) }; SNAP_KEYS.forEach(function (k) { s[k] = m[k]; }); return s; }
-  function restore5(m, s) { SNAP_KEYS.forEach(function (k) { m[k] = s[k]; }); m.charges = copy(s.charges); }
-  function pushSnap(m) { m.hist.push(m.kind === '5' ? snap5(m) : snapB(m)); if (m.hist.length > 40) m.hist.shift(); }
-
-  function newMatch5(run) {
-    var perks = {};
-    run.relics.forEach(function (id) { perks[id] = 1; });
-    var m = {
-      kind: '5', rules: rulesFor(run), x: 0, o: 0, b: 0, turn: 'X', over: null, winMask: 0,
-      counters: run.counters.slice(), charges: copy(run.charges), perks: perks, usedRelic: false,
-      xTurns: 0, aiMarks: 0, silenceLeft: 0, quickLeft: 0, freeze: 0, aiDue: 0, bonus: 0,
-      hist: [], lastAI: -1, hint: -1, flash: ''
+  /* ---------- shared match setup ---------- */
+  function baseMatch(run, kind) {
+    var perks = {}; run.relics.forEach(function (id) { perks[id] = 1; });
+    var charges = copy(run.charges);
+    if (setCount(run, 'fire') >= 3) ['zap', 'nuke'].forEach(function (k) { if (charges[k] !== undefined) charges[k] = maxCharges(run, k); });
+    return {
+      kind: kind, char: run.char, perks: perks, sets: setLevels(run), act: run.act, charges: charges,
+      turn: 'X', over: null, usedRelic: false, xTurns: 0, aiTurns: 0, aiDue: 0, freeze: 0, bonus: 0,
+      skips: 0, xPlaced: 0, hist: [], flash: '', silenceLeft: 0, quickLeft: 0, napDouble: 0, brainLeft: perks.brainfreeze ? 1 : 0
     };
-    var cs = m.counters;
-    if (cs.indexOf('dead') >= 0) m.b |= BIT(12);
-    if (cs.indexOf('rubble') >= 0) randEmpty(m, 2, 12).forEach(function (c) { m.b |= BIT(c); });
-    if (cs.indexOf('silence') >= 0) m.silenceLeft = 1;
-    if (cs.indexOf('quick') >= 0) m.quickLeft = 1;
-    if (cs.indexOf('head') >= 0) addAIMark(m, randEmpty(m, 1, 12)[0]);
-    if (perks.center) {
-      var order = [12, 7, 11, 13, 17, 6, 8, 16, 18];
-      for (var i = 0; i < order.length; i++) if (emptyAt(m, order[i])) { m.x |= BIT(order[i]); break; }
+  }
+  function strikeEvery(m) { return m.sets.tempo >= 2 ? 2 : 3; }
+  function isStrikeTurn(m) { var iv = strikeEvery(m); return m.perks.strike && m.xTurns % iv === iv - 1; }
+  /* AI turn skipping shared by every game. Returns a message or ''. */
+  function skipCheck(m) {
+    m.aiDue++;
+    var why = '';
+    if (m.freeze > 0) { m.freeze = 0; why = 'Frozen! The AI skips its turn.'; }
+    else if (m.perks.sleepy && m.aiDue % 4 === 0) why = 'Sleepy AI skips its turn.';
+    else if (m.opp === 'napper' && m.aiDue % 5 === 0) { m.napDouble = 1; why = 'The Napper naps. It will play twice next.'; }
+    if (why && why.indexOf('Napper') < 0) m.skips++;  /* a nap is the opponent's habit, not your skip */
+    return why;
+  }
+
+  /* ---------- grid games: 5x5 matches, Speed Round, Gravity ---------- */
+  function rulesFor(m) {
+    var g0 = E.makeGame(GAMES[m.game]), p = E.patterns(g0), ex = [];
+    if (m.perks.corners) ex.push(p.corners);
+    if (m.perks.plus && p.plus) ex.push(p.plus);
+    return ex.length ? E.makeGame(GAMES[m.game], ex) : g0;
+  }
+  function legal(m) { return E.legalMask(m.g, m.x | m.o | m.b); }
+  function legalCells(m) { return bits(legal(m), m.g.nc); }
+  function emptyAt(m, c) { return !((m.x | m.o | m.b) & BIT(c)); }
+  function neighbors(m, c) {
+    var w = m.g.w, h = m.g.h, r = Math.floor(c / w), col = c % w, out = [];
+    for (var dr = -1; dr <= 1; dr++) for (var dc = -1; dc <= 1; dc++) {
+      if (!dr && !dc) continue;
+      var rr = r + dr, cc = col + dc;
+      if (rr >= 0 && rr < h && cc >= 0 && cc < w) out.push(rr * w + cc);
     }
-    if (perks.freebie) randEmpty(m, 2, -1).forEach(function (c) { m.x |= BIT(c); });
-    pushSnap(m);
+    return out;
+  }
+  function dropCell(m, col) {
+    var leg = legal(m);
+    for (var r = m.g.h - 1; r >= 0; r--) { var c = r * m.g.w + col; if (leg & BIT(c)) return c; }
+    return -1;
+  }
+  /* gravity: everything falls to the lowest free square in its column */
+  function settle(m) {
+    if (!m.g.gravity) return;
+    var w = m.g.w, h = m.g.h, nx = 0, no = 0, nb = 0;
+    for (var col = 0; col < w; col++) {
+      var r2 = h - 1;
+      for (var r = h - 1; r >= 0; r--) {
+        var c = r * w + col, t = BIT(r2 * w + col);
+        if (m.x & BIT(c)) { nx |= t; r2--; } else if (m.o & BIT(c)) { no |= t; r2--; } else if (m.b & BIT(c)) { nb |= t; r2--; }
+      }
+    }
+    m.x = nx; m.o = no; m.b = nb;
+  }
+  function burnO(m, c) {
+    m.o &= ~BIT(c);
+    if (m.sets.fire >= 2) m.b |= BIT(c); else settle(m);
+    if (m.lastAI === c) m.lastAI = -1;
+  }
+
+  var SNAP = ['x', 'o', 'b', 'xTurns', 'aiTurns', 'aiDue', 'freeze', 'bonus', 'hint', 'lastAI', 'lastX', 'skips', 'xPlaced',
+    'silenceLeft', 'quickLeft', 'napDouble', 'brainLeft', 'plies', 'turn'];
+  function snapGrid(m) { var s = { charges: copy(m.charges), xOrder: m.xOrder.slice() }; SNAP.forEach(function (k) { s[k] = m[k]; }); return s; }
+  function restoreGrid(m, s) { SNAP.forEach(function (k) { m[k] = s[k]; }); m.charges = copy(s.charges); m.xOrder = s.xOrder.slice(); }
+
+  function newGrid(run, game, oppId) {
+    var m = baseMatch(run, 'grid');
+    m.game = game; m.opp = oppId; m.boss = game !== 'std';
+    m.g = rulesFor(m);
+    m.series = game === 'speed' ? { round: 1, you: 0, them: 0, toWin: 2, max: 5, log: [] } : null;
+    m.timed = game === 'speed' ? 8 : 0;
+    m.baseCharges = copy(m.charges);
+    if (oppId === 'sniper') m.quickLeft = 1;
+    if (oppId === 'warden') m.silenceLeft = 1;
+    resetBoard(m);
     return m;
+  }
+  function resetBoard(m) {
+    m.x = 0; m.o = 0; m.b = 0; m.over = null; m.winMask = 0; m.hint = -1; m.lastAI = -1; m.lastX = -1; m.xOrder = [];
+    m.xTurns = 0; m.aiTurns = 0; m.aiDue = 0; m.bonus = 0; m.plies = 0; m.xPlaced = 0; m.pauseRound = null; m.hist = [];
+    m.freeze = m.sets.frost >= 3 ? 1 : 0;
+    var g = m.g;
+    if (m.opp === 'mason') shuffle(bits(legal(m), g.nc)).slice(0, 3).forEach(function (c) { m.b |= BIT(c); });
+    if (m.opp === 'bully') shuffle(legalCells(m).filter(function (c) { return g.center[c] < Math.max.apply(null, g.center); })).slice(0, 2).forEach(function (c) { m.o |= BIT(c); m.lastAI = c; });
+    if (m.perks.center) {
+      var best = -1; legalCells(m).forEach(function (c) { if (best < 0 || g.center[c] > g.center[best]) best = c; });
+      if (best >= 0) m.x |= BIT(best);
+    }
+    var free = (m.perks.freebie ? (m.game === 'speed' ? 1 : 2) : 0) + (m.sets.tempo >= 3 ? 1 : 0);
+    for (var i = 0; i < free; i++) { var c = pick(legalCells(m)); if (c >= 0) m.x |= BIT(c); }
+    if (E.lineWon(m.x, g.lines[0])) { /* a free start must never win outright */ m.x = m.x & (m.x - 1); }
+    if (m.series && m.series.round % 2 === 0) m.turn = 'O'; else m.turn = 'X';
+    m.hist.push(snapGrid(m));
   }
 
   function checkEnds(m) {
-    var xl = E.lineWon(m.x, m.rules.lines[0]);
+    var xl = E.lineWon(m.x, m.g.lines[0]);
     if (xl) { m.over = 'win'; m.winMask = xl; return true; }
-    var ol = E.lineWon(m.o, m.rules.lines[1]);
+    var ol = E.lineWon(m.o, m.g.lines[1]);
     if (ol) { m.over = 'loss'; m.winMask = ol; return true; }
     return false;
   }
   function alive(m) {
-    var lx = m.rules.lines[0], lo = m.rules.lines[1], i, l;
+    var lx = m.g.lines[0], lo = m.g.lines[1], i, l;
     for (i = 0; i < lx.length; i++) { l = lx[i]; if (!(l & m.b) && !(l & m.o)) return true; }
     for (i = 0; i < lo.length; i++) { l = lo[i]; if (!(l & m.b) && !(l & m.x)) return true; }
     return false;
   }
   function checkDraw(m) {
-    if (countEmpty(m) === 0) { m.over = 'draw'; return true; }
-    if (!alive(m) && !hasCharge(m, 'zap') && !hasCharge(m, 'nuke')) { m.over = 'draw'; return true; }
+    if (!legal(m)) { m.over = 'draw'; return true; }
+    if (!alive(m) && !(m.charges.zap > 0) && !(m.charges.nuke > 0)) { m.over = 'draw'; return true; }
     return false;
   }
+  /* Avalanche: every 6 moves the bottom row falls away */
+  function afterPly(m) {
+    m.plies++;
+    if (m.opp === 'avalanche' && !m.over && m.plies % 6 === 0) {
+      var f = m.g.full, w = m.g.w;
+      m.x = (m.x << w) & f; m.o = (m.o << w) & f; m.b = (m.b << w) & f;
+      m.lastAI = m.lastAI >= 0 && m.lastAI + w < m.g.nc ? m.lastAI + w : -1;
+      m.quake = 1;
+      m.flash = (m.flash ? m.flash + ' ' : '') + 'The floor falls away!';
+    }
+  }
+  /* rounds of the Speed Round */
+  function seriesCheck(m) {
+    var s = m.series;
+    if (!s || !m.over || m.pauseRound) return;
+    var r = m.over;
+    s.log.push(r);
+    if (r === 'win') s.you++; else if (r === 'loss') s.them++;
+    var final = null;
+    if (s.you >= s.toWin) final = 'win';
+    else if (s.them >= s.toWin) final = 'loss';
+    else if (s.round >= s.max) final = s.you > s.them ? 'win' : (s.them > s.you ? 'loss' : 'draw');
+    if (final) { m.over = final; s.done = true; return; }
+    m.pauseRound = r; m.over = null; m.turn = 'pause';
+  }
+  function nextRound(m) {
+    if (!m.series || !m.pauseRound) return;
+    m.series.round++;
+    m.charges = copy(m.baseCharges);
+    resetBoard(m);
+  }
 
-  /* called when the player's turn ends: handles skipped AI turns */
-  function endTurn5(m) {
+  function endTurnGrid(m) {
     m.xTurns++; m.hint = -1;
-    if (m.over) return;
-    if (checkDraw(m)) return;
-    m.aiDue++;
-    var why = '';
-    if (m.freeze > 0) { m.freeze = 0; why = 'The AI is frozen and skips its turn.'; }
-    else if (m.perks.sleepy && m.aiDue % 4 === 0) why = 'Sleepy AI skips its turn.';
-    if (why) { m.flash = why; m.turn = 'X'; pushSnap(m); return; }
+    if (m.over) return seriesCheck(m);
+    if (checkDraw(m)) return seriesCheck(m);
+    if (m.perks.spark && m.xTurns % 5 === 0) {
+      var t = pick(bits(m.o, m.g.nc));
+      if (t >= 0) { burnO(m, t); m.flash = (m.flash ? m.flash + ' ' : '') + 'Spark burns an AI mark.'; if (checkEnds(m)) return seriesCheck(m); }
+    }
+    var why = skipCheck(m);
+    if (why) { m.flash = (m.flash ? m.flash + ' ' : '') + why; m.turn = 'X'; m.hist.push(snapGrid(m)); return; }
     m.turn = 'O';
   }
   function spend(m, id) {
@@ -909,166 +1096,234 @@ var Game = (function (E) {
     var left = m.charges.rewind - 1;
     m.hist.pop();
     var s = m.hist.pop();
-    if (m.kind === '5') restore5(m, s); else restoreB(m, s);
+    if (m.kind === 'grid') restoreGrid(m, s); else restoreSuper(m, s);
     m.charges.rewind = left; m.usedRelic = true; m.over = null; m.winMask = 0; m.turn = 'X';
-    m.hint = m.kind === '5' ? -1 : null;
-    pushSnap(m);
+    m.hist.push(m.kind === 'grid' ? snapGrid(m) : snapSuper(m));
     return 'Time rewinds.';
   }
 
-  /* one-tap buttons. Returns a message. */
-  function use5(m, id) {
+  function useGrid(m, id) {
     if (m.over || m.turn !== 'X') return 'Wait for your turn.';
     var r = RELICS[id];
     if (!r || r.kind !== 'active') return null;
     if (m.bonus) return 'Place your second mark first.';
-    if (!hasCharge(m, id)) return 'No uses left.';
+    if (!(m.charges[id] > 0)) return 'No uses left.';
     if (id === 'rewind') return rewind(m);
     if (id === 'freeze' && m.freeze) return 'The AI is already frozen.';
     if (id === 'zap' && !(m.lastAI >= 0 && (m.o & BIT(m.lastAI)))) return 'The AI has no mark to zap.';
     if (id === 'nuke' && !m.o) return 'The AI has no marks yet.';
-    if (!spend(m, id)) return 'Gag Order: ' + r.name + ' fizzles.';
+    if (!spend(m, id)) return 'The Warden blocks ' + r.name + '.';
     switch (id) {
       case 'freeze': m.freeze = 1; return 'Frozen! You get two moves.';
-      case 'zap': m.o &= ~BIT(m.lastAI); m.lastAI = -1; return 'Zapped. Your move.';
-      case 'nuke': m.o = 0; m.lastAI = -1; return 'All AI marks wiped. Your move.';
+      case 'zap':
+        if (m.char === 'thief') {
+          m.o &= ~BIT(m.lastAI); m.x |= BIT(m.lastAI); m.lastAI = -1;
+          if (checkEnds(m)) { endTurnGrid(m); return 'Stolen, and it wins!'; }
+          return 'Stolen! That mark is yours now.';
+        }
+        burnO(m, m.lastAI); if (checkEnds(m)) { endTurnGrid(m); return null; }
+        return 'Zapped. Your move.';
+      case 'nuke': m.o = 0; m.lastAI = -1; settle(m); if (checkEnds(m)) { endTurnGrid(m); return null; } return 'All AI marks wiped. Your move.';
       case 'hint':
-        var res = E.search5({ x: m.x, o: m.o, b: m.b, ban: 0 }, m.rules, 0, cfg.hintMs);
+        var res = E.search({ x: m.x, o: m.o, b: m.b }, m.g, 0, cfg.hintMs);
         m.hint = res.move;
         return res.move >= 0 ? 'Best move marked.' : 'No moves left.';
     }
     return null;
   }
 
-  function tap5(m, c) {
+  function tapGrid(m, c) {
     if (m.over || m.turn !== 'X') return null;
-    if (!emptyAt(m, c)) return 'That square is taken.';
-    m.x |= BIT(c); m.hint = -1; m.lastX = c;
+    if (m.g.gravity) { c = dropCell(m, c % m.g.w); if (c < 0) return 'That column is full.'; }
+    if (!(legal(m) & BIT(c))) return 'That square is taken.';
+    m.x |= BIT(c); m.hint = -1; m.lastX = c; m.xOrder.push(c); m.xPlaced++;
+    var note = null;
+    if (m.xPlaced % 4 === 0 && m.char === 'ember') {
+      var t = pick(neighbors(m, c).filter(function (n) { return m.o & BIT(n); }));
+      if (t >= 0) { burnO(m, t); note = 'Ember burns a neighbor.'; }
+    }
+    if (m.xPlaced % 4 === 0 && m.char === 'twin') {
+      var leg = legal(m), t2 = pick(neighbors(m, c).filter(function (n) { return leg & BIT(n); }));
+      if (t2 < 0) t2 = pick(legalCells(m));
+      if (t2 >= 0) { m.x |= BIT(t2); m.xOrder.push(t2); note = 'Twin lands twice.'; }
+    }
     checkEnds(m);
-    if (m.over || m.bonus) { m.bonus = 0; endTurn5(m); return null; }
-    if (m.perks.strike && m.xTurns % 3 === 2 && countEmpty(m) > 0) { m.bonus = 1; return 'Double Strike! Place one more.'; }
-    endTurn5(m);
-    return null;
-  }
-
-  function ai5(m) {
-    var ev = [];
-    if (m.over || m.turn !== 'O') return ev;
-    var n = m.quickLeft > 0 ? 2 : 1;
-    if (m.quickLeft > 0) m.quickLeft--;
-    for (var k = 0; k < n; k++) {
-      var res = E.search5({ x: m.x, o: m.o, b: m.b, ban: 0 }, m.rules, 1, cfg.aiMs5);
-      if (res.move < 0) { ev.push('The AI has no legal move.'); break; }
-      addAIMark(m, res.move);
-      var ol = E.lineWon(m.o, m.rules.lines[1]);
-      if (ol) { m.over = 'loss'; m.winMask = ol; break; }
-    }
-    if (!m.over && !checkDraw(m)) { m.turn = 'X'; pushSnap(m); }
-    return ev;
-  }
-
-  /* ---------- boss match (Super XOX) ---------- */
-  function newMatchBoss(run) {
-    var boss = BOSSES[run.act - 1];
-    var m = {
-      kind: 'boss', boss: boss, twist: boss.twist,
-      S: E.newSuper({ spin: boss.twist === 'spin', cursed: boss.twist === 'curse' ? rnd(9) : -1 }),
-      turn: 'X', over: null, charges: {}, trick: run.trick, extra: 0, openerDone: false,
-      sneak: run.trick === 'sneak', sneakUsed: false, castingVote: run.trick === 'castingvote',
-      curseHearts: 0, hist: [], last: null, lastAI: null, usedRelic: false, xTurns: 0, hint: null, rotatedNow: false, flash: ''
-    };
-    var bat = has(run, 'battery') ? 1 : 0;
-    if (run.trick === 'overplay' || run.trick === 'freepass') m.charges[run.trick] = 1 + bat;
-    ['rewind', 'hint'].forEach(function (k) { if (run.charges[k] !== undefined) m.charges[k] = run.charges[k]; });
-    pushSnap(m);
-    return m;
-  }
-  var SNAP_B = ['S', 'extra', 'openerDone', 'sneakUsed', 'curseHearts', 'xTurns', 'last', 'lastAI', 'hint'];
-  function snapB(m) { var s = { charges: copy(m.charges) }; SNAP_B.forEach(function (k) { s[k] = m[k]; }); return s; }
-  function restoreB(m, s) { SNAP_B.forEach(function (k) { m[k] = s[k]; }); m.charges = copy(s.charges); }
-  function withNext(S, n) { var T = E.cloneSuper(S); T.next = n; return T; }
-
-  function useBoss(m, id) {
-    if (m.over || m.turn !== 'X') return 'Wait for your turn.';
-    if (m.extra === 2) return 'Make your second move first.';
-    if (!(m.charges[id] > 0)) return 'No uses left.';
-    if (id === 'rewind') return rewind(m);
-    if (id === 'hint') {
-      m.charges.hint--; m.usedRelic = true;
-      var r = E.searchSuper(m.S, 0, cfg.hintMs);
-      m.hint = r ? [r.b, r.c] : null;
-      return r ? 'Best move marked.' : 'No moves left.';
-    }
-    if (id === 'freepass') {
-      if (m.S.next < 0) return 'You can already play anywhere.';
-      m.charges[id]--; m.usedRelic = true; m.S = withNext(m.S, -1); return 'Play on any board.';
-    }
-    if (id === 'overplay') {
-      if (m.extra) return 'Already armed. Make your moves.';
-      m.charges[id]--; m.usedRelic = true; m.extra = 1; return 'Play twice this turn.';
-    }
-    return null;
-  }
-
-  function legalBoss(m, b, c) { return E.superMoves(m.S).some(function (mv) { return mv[0] === b && mv[1] === c; }); }
-
-  function playBoss(m, b, c, side) {
-    var T = E.applySuper(m.S, b, c, side);
-    m.S = T; m.last = { b: b, c: c, side: side }; m.rotatedNow = false;
-    if (T.rotated) {
-      m.rotatedNow = true;
-      m.last = { b: E.ROT[b], c: E.ROT[c], side: side };
-      if (m.lastAI) m.lastAI = { b: E.ROT[m.lastAI.b], c: E.ROT[m.lastAI.c] };
-    }
-    var notes = [];
-    if (side === 0 && T.won >= 0 && T.won === T.cursed && T.res[T.won] === 1) { m.curseHearts++; notes.push('You won the cursed board. That costs a heart.'); }
-    if (T.cursedVoid) notes.push('The curse voids the boss win.');
-    if (T.rotated) notes.push('The grid turns.');
-    var r = E.superResult(T);
-    if (r !== 0) {
-      if (r === 3 && m.castingVote) r = 1;
-      m.over = r === 1 ? 'win' : (r === 2 ? 'loss' : 'draw');
-    }
-    return notes.join(' ') || null;
-  }
-
-  function tapBoss(m, b, c) {
-    if (m.over || m.turn !== 'X') return null;
-    if (!legalBoss(m, b, c)) return m.S.next >= 0 ? 'Play in the highlighted board.' : 'That board is finished.';
-    var note = playBoss(m, b, c, 0);
-    m.hint = null;
-    if (m.over) { m.xTurns++; return note; }
-    if (m.extra === 1) { m.extra = 2; return (note ? note + ' ' : '') + 'Play again.'; }
-    if (m.extra === 2) m.extra = 0;
-    m.xTurns++; m.turn = 'O';
+    afterPly(m);
+    if (m.over || m.bonus) { m.bonus = 0; endTurnGrid(m); return note; }
+    if (isStrikeTurn(m) && legal(m)) { m.bonus = 1; return (note ? note + ' ' : '') + 'Double Strike! Place one more.'; }
+    endTurnGrid(m);
     return note;
   }
 
-  function aiBoss(m) {
+  function aiMoveGrid(m) {
+    var leg = legal(m), cells = bits(leg, m.g.nc);
+    if (!cells.length) return -1;
+    var win1 = cells.filter(function (c) { return E.lineWon(m.o | BIT(c), m.g.lines[1]); });
+    if (m.brainLeft > 0) { m.brainLeft--; return win1.length ? win1[0] : pick(cells); }
+    if (m.opp === 'gambler' && m.aiTurns % 3 === 2 && !win1.length) return pick(cells);
+    if (m.opp === 'copycat' && !win1.length && m.lastX >= 0) {
+      var block = cells.filter(function (c) { return E.lineWon(m.x | BIT(c), m.g.lines[0]); });
+      var mirror = m.g.nc - 1 - m.lastX;
+      if (!block.length && (leg & BIT(mirror))) return mirror;
+    }
+    var ms = m.boss ? cfg.aiMsBoss[m.act - 1] : cfg.aiMs[m.act - 1];
+    return E.search({ x: m.x, o: m.o, b: m.b }, m.g, 1, ms).move;
+  }
+  function aiGrid(m) {
     var ev = [];
     if (m.over || m.turn !== 'O') return ev;
-    if (m.sneak && !m.sneakUsed) {
-      m.sneakUsed = true; m.turn = 'X'; pushSnap(m);
-      return ['Sneak Attack! The boss skips its first move.'];
-    }
-    var n = (m.twist === 'opener' && !m.openerDone) ? 2 : 1;
-    m.openerDone = true;
+    var n = 1;
+    if (m.quickLeft > 0) { m.quickLeft--; n = 2; }
+    if (m.napDouble) { m.napDouble = 0; n = 2; }
     for (var k = 0; k < n; k++) {
-      var res = E.searchSuper(m.S, 1, cfg.aiMsBoss);
-      if (!res) break;
-      var note = playBoss(m, res.b, res.c, 1);
-      m.lastAI = { b: m.last.b, c: m.last.c };
-      if (note) ev.push(note);
-      if (m.over) break;
+      var c = aiMoveGrid(m);
+      if (c < 0) break;
+      m.o |= BIT(c); m.lastAI = c;
+      if (checkEnds(m)) break;
+      afterPly(m);
+      if (m.over || !legal(m)) break;
     }
-    if (!m.over) { m.turn = 'X'; pushSnap(m); }
+    if (!m.over && m.opp === 'hoarder' && m.aiTurns % 3 === 2) {
+      var s = pick(legalCells(m).filter(function (c) { return !m.g.gravity; }));
+      if (s >= 0) { m.b |= BIT(s); ev.push('The Hoarder drops a stone.'); }
+    }
+    if (!m.over && m.opp === 'janitor' && m.aiTurns % 4 === 3) {
+      while (m.xOrder.length) { var old = m.xOrder.shift(); if (m.x & BIT(old)) { m.x &= ~BIT(old); ev.push('The Janitor erases your oldest mark.'); break; } }
+    }
+    m.aiTurns++;
+    if (m.flash) { ev.push(m.flash); m.flash = ''; }
+    if (!m.over && !checkDraw(m)) { m.turn = 'X'; m.hist.push(snapGrid(m)); }
+    seriesCheck(m);
     return ev;
   }
+
+  /* ---------- Super XOX (Act 3 boss) ---------- */
+  function newSuperMatch(run, boss) {
+    var m = baseMatch(run, 'super');
+    m.game = 'super'; m.opp = boss.id; m.boss = true;
+    m.S = E.newSuper({ target: 3 });
+    m.phaseN = 1; m.bossDouble = 0; m.hint = null; m.lastAI = null; m.last = null;
+    m.freeze = m.sets.frost >= 3 ? 1 : 0;
+    var S = m.S;
+    if (m.perks.center) S.bx[4] |= 16;
+    var free = (m.perks.freebie ? 2 : 0) + (m.sets.tempo >= 3 ? 1 : 0);
+    var boards = shuffle([0, 1, 2, 3, 5, 6, 7, 8]).slice(0, free);
+    boards.forEach(function (b) { S.bx[b] |= BIT(rnd(9)); });
+    m.hist.push(snapSuper(m));
+    return m;
+  }
+  var SNAP_S = ['S', 'xTurns', 'aiTurns', 'aiDue', 'freeze', 'bonus', 'hint', 'lastAI', 'last', 'skips', 'xPlaced', 'phaseN', 'bossDouble', 'brainLeft', 'turn'];
+  function snapSuper(m) { var s = { charges: copy(m.charges) }; SNAP_S.forEach(function (k) { s[k] = k === 'S' ? E.cloneSuper(m.S) : m[k]; }); return s; }
+  function restoreSuper(m, s) { SNAP_S.forEach(function (k) { m[k] = k === 'S' ? E.cloneSuper(s.S) : s[k]; }); m.charges = copy(s.charges); }
+  function recompute(S, b) {
+    if (S.res[b] !== 0) return;
+    if (E.hasLine3(S.bx[b])) S.res[b] = 1; else if (E.hasLine3(S.bo[b])) S.res[b] = 2; else if ((S.bx[b] | S.bo[b]) === 511) S.res[b] = 3;
+  }
+  function superOver(m) {
+    var r = E.superResult(m.S);
+    if (r) m.over = r === 1 ? 'win' : (r === 2 ? 'loss' : 'draw');
+    return !!r;
+  }
+  function boardsWon(S, v) { var n = 0; for (var i = 0; i < 9; i++) if (S.res[i] === v) n++; return n; }
+  function phaseCheck(m) {
+    var nx = boardsWon(m.S, 1);
+    if (nx >= 1 && m.phaseN === 1) { m.phaseN = 2; m.S.spin = true; m.flash = (m.flash ? m.flash + ' ' : '') + 'Phase 2: the grid now turns every 4 moves.'; }
+    if (nx >= 2 && m.phaseN === 2) { m.phaseN = 3; m.bossDouble = 1; m.flash = (m.flash ? m.flash + ' ' : '') + 'Phase 3: the Grandmaster plays twice.'; }
+  }
+  function oMarksOpen(S) { var a = []; for (var b = 0; b < 9; b++) if (S.res[b] === 0) for (var c = 0; c < 9; c++) if (S.bo[b] & BIT(c)) a.push([b, c]); return a; }
+  function nb3(c) { var r = Math.floor(c / 3), k = c % 3, out = []; for (var dr = -1; dr <= 1; dr++) for (var dc = -1; dc <= 1; dc++) { if (!dr && !dc) continue; var rr = r + dr, cc = k + dc; if (rr >= 0 && rr < 3 && cc >= 0 && cc < 3) out.push(rr * 3 + cc); } return out; }
+
+  function endTurnSuper(m) {
+    m.xTurns++; m.hint = null;
+    if (m.over) return;
+    if (m.perks.spark && m.xTurns % 5 === 0) {
+      var t = pick(oMarksOpen(m.S));
+      if (t !== -1) { m.S = E.cloneSuper(m.S); m.S.bo[t[0]] &= ~BIT(t[1]); m.flash = (m.flash ? m.flash + ' ' : '') + 'Spark burns a boss mark.'; }
+    }
+    var why = skipCheck(m);
+    if (why) { m.flash = (m.flash ? m.flash + ' ' : '') + why; m.turn = 'X'; m.hist.push(snapSuper(m)); return; }
+    m.turn = 'O';
+  }
+  function legalSuper(m, b, c) { return E.superMoves(m.S).some(function (mv) { return mv[0] === b && mv[1] === c; }); }
+  function tapSuper(m, b, c) {
+    if (m.over || m.turn !== 'X') return null;
+    if (!legalSuper(m, b, c)) return m.S.next >= 0 ? 'Play in the highlighted board.' : 'That board is finished.';
+    var T = E.applySuper(m.S, b, c, 0), note = null;
+    m.xPlaced++;
+    if (T.res[b] === 0 && m.xPlaced % 4 === 0 && m.char === 'ember') {
+      var t = pick(nb3(c).filter(function (n) { return T.bo[b] & BIT(n); }));
+      if (t >= 0) { T.bo[b] &= ~BIT(t); note = 'Ember burns a neighbor.'; }
+    }
+    if (T.res[b] === 0 && m.xPlaced % 4 === 0 && m.char === 'twin') {
+      var t2 = pick(nb3(c).filter(function (n) { return !((T.bx[b] | T.bo[b]) & BIT(n)); }));
+      if (t2 >= 0) { T.bx[b] |= BIT(t2); recompute(T, b); if (T.res[b] !== 0 && T.next === b) T.next = -1; note = 'Twin lands twice.'; }
+    }
+    m.S = T; m.hint = null;
+    if (T.rotated && m.lastAI) m.lastAI = { b: E.ROT[m.lastAI.b], c: E.ROT[m.lastAI.c] };
+    if (superOver(m)) { m.xTurns++; return note; }
+    phaseCheck(m);
+    if (m.bonus) { m.bonus = 0; endTurnSuper(m); return note; }
+    if (isStrikeTurn(m)) { m.bonus = 1; return (note ? note + ' ' : '') + 'Double Strike! Move again.'; }
+    endTurnSuper(m);
+    return note;
+  }
+  function useSuper(m, id) {
+    if (m.over || m.turn !== 'X') return 'Wait for your turn.';
+    var r = RELICS[id];
+    if (!r || r.kind !== 'active') return null;
+    if (m.bonus) return 'Make your second move first.';
+    if (!(m.charges[id] > 0)) return 'No uses left.';
+    if (id === 'rewind') return rewind(m);
+    if (id === 'freeze' && m.freeze) return 'The boss is already frozen.';
+    var la = m.lastAI;
+    if (id === 'zap' && !(la && m.S.res[la.b] === 0 && (m.S.bo[la.b] & BIT(la.c)))) return 'Nothing to zap on an open board.';
+    if (id === 'nuke' && !oMarksOpen(m.S).length) return 'No boss marks on open boards.';
+    spend(m, id);
+    switch (id) {
+      case 'freeze': m.freeze = 1; return 'Frozen! You get two moves.';
+      case 'zap':
+        m.S = E.cloneSuper(m.S); m.S.bo[la.b] &= ~BIT(la.c); m.lastAI = null;
+        if (m.char === 'thief') { m.S.bx[la.b] |= BIT(la.c); recompute(m.S, la.b); if (superOver(m)) { m.xTurns++; return 'Stolen, and it wins!'; } phaseCheck(m); return 'Stolen! That mark is yours now.'; }
+        return 'Zapped. Your move.';
+      case 'nuke':
+        m.S = E.cloneSuper(m.S); for (var b = 0; b < 9; b++) if (m.S.res[b] === 0) m.S.bo[b] = 0;
+        m.lastAI = null; return 'Boss marks wiped from open boards.';
+      case 'hint':
+        var h = E.searchSuper(m.S, 0, cfg.hintMs); m.hint = h ? [h.b, h.c] : null;
+        return h ? 'Best move marked.' : 'No moves left.';
+    }
+    return null;
+  }
+  function aiSuper(m) {
+    var ev = [];
+    if (m.over || m.turn !== 'O') return ev;
+    var n = 1 + (m.bossDouble ? 1 : 0); m.bossDouble = 0;
+    for (var k = 0; k < n; k++) {
+      var mv;
+      if (m.brainLeft > 0) { m.brainLeft--; var all = E.superMoves(m.S); var p = all[rnd(all.length)]; mv = p ? { b: p[0], c: p[1] } : null; }
+      else mv = E.searchSuper(m.S, 1, cfg.aiMsBoss[2]);
+      if (!mv) break;
+      var T = E.applySuper(m.S, mv.b, mv.c, 1);
+      m.S = T;
+      m.lastAI = T.rotated ? { b: E.ROT[mv.b], c: E.ROT[mv.c] } : { b: mv.b, c: mv.c };
+      if (T.rotated) { m.rotatedNow = true; ev.push('The grid turns.'); }
+      if (superOver(m)) break;
+    }
+    m.aiTurns++;
+    if (m.flash) { ev.push(m.flash); m.flash = ''; }
+    if (!m.over) { m.turn = 'X'; m.hist.push(snapSuper(m)); }
+    return ev;
+  }
+
+  /* ---------- public dispatch ---------- */
+  function tap(m, a, b) { return m.kind === 'grid' ? tapGrid(m, a) : tapSuper(m, a, b); }
+  function use(m, id) { return m.kind === 'grid' ? useGrid(m, id) : useSuper(m, id); }
+  function ai(m) { return m.kind === 'grid' ? aiGrid(m) : aiSuper(m); }
 
   /* ---------- save / load ---------- */
   function serialize(run) {
     return JSON.stringify(run, function (k, v) {
-      if (k === 'rules') return undefined;
+      if (k === 'g') return undefined;
       if (v && (v instanceof Int16Array || v instanceof Int8Array)) return { __ta: v instanceof Int16Array ? 16 : 8, a: Array.prototype.slice.call(v) };
       return v;
     });
@@ -1078,32 +1333,31 @@ var Game = (function (E) {
       if (v && v.__ta) return v.__ta === 16 ? new Int16Array(v.a) : new Int8Array(v.a);
       return v;
     });
-    if (run.v !== 2) throw new Error('old save');
-    if (run.match && run.match.kind === '5') run.match.rules = rulesFor(run);
+    if (run.v !== 3) throw new Error('old save');
+    if (run.match && run.match.kind === 'grid') run.match.g = rulesFor(run.match);
     return run;
   }
 
   return {
-    cfg: cfg, RELICS: RELICS, STARTERS: STARTERS, TRICKS: TRICKS, BOSSES: BOSSES, COUNTERS: COUNTERS,
-    newRun: newRun, startRun: startRun, pickStarter: pickStarter, startMatch: startMatch, chooseTrick: chooseTrick,
-    resolve: resolve, next: next, buy: buy, heal: heal, leaveShop: leaveShop, pickReward: pickReward,
-    priceOf: priceOf, healPrice: healPrice, has: has, gain: gain, advance: advance, refill: refill,
-    use5: use5, tap5: tap5, ai5: ai5, useBoss: useBoss, tapBoss: tapBoss, aiBoss: aiBoss, legalBoss: legalBoss,
-    serialize: serialize, deserialize: deserialize, emptyAt: emptyAt, hasCharge: hasCharge,
-    newMatch5: newMatch5, newMatchBoss: newMatchBoss
+    cfg: cfg, SETS: SETS, RELICS: RELICS, CHARS: CHARS, CHAR_ORDER: CHAR_ORDER, OPPONENTS: OPPONENTS, BOSSES: BOSSES, GAMES: GAMES,
+    newRun: newRun, startRun: startRun, pickChar: pickChar, startMatch: startMatch, resolve: resolve, next: next,
+    buy: buy, heal: heal, leaveShop: leaveShop, pickReward: pickReward, priceOf: priceOf, healPrice: healPrice,
+    has: has, gain: gain, advance: advance, refill: refill, setCount: setCount, setLevels: setLevels, maxCharges: maxCharges,
+    tap: tap, use: use, ai: ai, nextRound: nextRound, legal: legal, legalCells: legalCells, dropCell: dropCell, emptyAt: emptyAt,
+    isStrikeTurn: isStrikeTurn, strikeEvery: strikeEvery, legalSuper: legalSuper, boardsWon: boardsWon,
+    serialize: serialize, deserialize: deserialize
   };
 })(XOX);
 if (typeof module !== 'undefined' && module.exports) module.exports = Game;
 
-/* XOX Rogue interface: renders the run state to the page. Needs XOX and Game. */
+/* XOX Rogue interface. Needs XOX and Game. */
 (function () {
   'use strict';
   var E = XOX, G = Game;
   var app = document.getElementById('app');
-  var SAVE = 'xoxrogue.run.v2', BEST = 'xoxrogue.best.v1';
-  var FULL = (1 << 25) - 1;
+  var SAVE = 'xoxrogue.run.v3', META = 'xoxrogue.meta.v1';
   var run = null;
-  var ui = { msg: '', thinking: false, prevX: 0, prevO: 0, prevKey: '', best: null, saved: null, screenKey: '', boardTurn: false };
+  var ui = { msg: '', thinking: false, prevX: 0, prevO: 0, meta: null, saved: null, screenKey: '', boardTurn: false, charIdx: 0, timer: null, timerKey: '', timerStart: 0, quake: false };
 
   /* ---------- storage ---------- */
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -1113,48 +1367,67 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Game;
     var s = lsGet(SAVE); if (!s) return null;
     try { var r = G.deserialize(s); return r && r.phase && r.phase !== 'end' && r.phase !== 'title' ? r : null; } catch (e) { return null; }
   }
-  function loadBest() {
-    var s = lsGet(BEST), d = { farthest: 0, victories: 0, runs: 0 };
-    if (s) { try { var o = JSON.parse(s); d.farthest = o.farthest | 0; d.victories = o.victories | 0; d.runs = o.runs | 0; } catch (e) { /* ignore */ } }
+  function loadMeta() {
+    var d = { unlocked: ['frost', 'ember'], farthest: 0, victories: 0, runs: 0 };
+    var s = lsGet(META);
+    if (s) { try { var o = JSON.parse(s); if (Array.isArray(o.unlocked)) d.unlocked = o.unlocked; d.farthest = o.farthest | 0; d.victories = o.victories | 0; d.runs = o.runs | 0; } catch (e) { /* ignore */ } }
     return d;
   }
+  function saveMeta() { lsSet(META, JSON.stringify(ui.meta)); }
   function save() { if (run && run.phase !== 'end' && run.phase !== 'title') lsSet(SAVE, G.serialize(run)); }
 
-  /* ---------- icons ---------- */
+  /* ---------- glyphs ---------- */
+  var GLYPH = {
+    frost: '<path d="M20 6v28M7.9 13l24.2 14M32.1 13L7.9 27"/><path d="M15.5 8.5L20 12l4.5-3.5M15.5 31.5L20 28l4.5 3.5"/>',
+    ember: '<path d="M20 35c-6.5 0-10.5-4.5-10.5-10.5 0-6 5-9 6.5-16 4 3.5 5 7 4.5 10.5 2-1.5 3-3.5 3.5-6 4 4 6.5 7.5 6.5 11.5 0 6-4 10.5-10.5 10.5z"/>',
+    thief: '<path d="M5 16c5-4 10-4 15 0 5-4 10-4 15 0 0 8-4.5 12-9 12-3 0-5-2-6-5-1 3-3 5-6 5-4.5 0-9-4-9-12z"/>',
+    twin: '<path d="M7 7l11 11M18 7L7 18M22 22l11 11M33 22L22 33"/>',
+    knight: '<path d="M20 5l13 5v10c0 8-6 13.5-13 16-7-2.5-13-8-13-16V10z"/><path d="M20 12v16"/>',
+    copycat: '<circle cx="16" cy="20" r="10"/><circle cx="24" cy="20" r="10"/>',
+    gambler: '<rect x="8" y="8" width="24" height="24" rx="4"/><circle class="f" cx="15" cy="15" r="2.4"/><circle class="f" cx="25" cy="25" r="2.4"/>',
+    napper: '<path d="M27 8a13 13 0 1 0 0 24A10 10 0 0 1 27 8z"/>',
+    hoarder: '<path d="M20 7L33 31H7z"/>',
+    bully: '<circle cx="20" cy="20" r="13"/><circle cx="20" cy="20" r="5"/>',
+    mason: '<rect x="8" y="8" width="24" height="24"/><path d="M8 20h24M20 8v12M14 20v12M26 20v12"/>',
+    sniper: '<circle cx="20" cy="20" r="10"/><path d="M20 4v9M20 27v9M4 20h9M27 20h9"/>',
+    janitor: '<path d="M13 8h14l7 12-7 12H13L6 20z"/>',
+    warden: '<path d="M20 6L34 20 20 34 6 20z"/>',
+    referee: '<path d="M20 6l4 9.5 10 .8-7.6 6.6 2.4 9.8L20 27.4l-8.8 5.3 2.4-9.8L6 16.3l10-.8z"/>',
+    avalanche: '<path d="M5 32L16 12l6 10 4-6 9 16z"/>',
+    grandmaster: '<path d="M7 31h26M8 31L6 12l8 7 6-10 6 10 8-7-2 19z"/>'
+  };
+  function gl(id, cls) { return '<svg class="' + (cls || 'm') + '" viewBox="0 0 40 40" aria-hidden="true">' + (GLYPH[id] || '<circle cx="20" cy="20" r="12.5"/>') + '</svg>'; }
+  var STONE = '<svg class="m stone" viewBox="0 0 40 40" aria-hidden="true"><rect x="7" y="7" width="26" height="26" rx="3"/><path d="M11 29L29 11M11 21L21 11M19 29L29 19"/></svg>';
+
   var ICONS = {
     freeze: '<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5L4.2 16.5"/><path d="M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5"/>',
+    sleepy: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>',
+    brainfreeze: '<path d="M8 9a5 5 0 0 1 8 0 5 5 0 0 1 2 8.5V20H6v-2.5A5 5 0 0 1 8 9z"/><path d="M12 9v11"/>',
     zap: '<path d="M13 2.5L5 13.5h6l-1 8 8-11h-6z"/>',
     nuke: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',
-    hint: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
-    rewind: '<path d="M4 12a8 8 0 1 0 2.6-5.9M4 3.5V8h4.5"/>',
-    center: '<rect x="3.5" y="3.5" width="17" height="17"/><circle cx="12" cy="12" r="3" fill="currentColor"/>',
-    freebie: '<rect x="4" y="10" width="16" height="10"/><path d="M3 7h18v3H3zM12 7v13M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"/>',
+    spark: '<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',
     strike: '<path d="M4 4l6 6M10 4l-6 6"/><path d="M14 14l6 6M20 14l-6 6"/>',
-    sleepy: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>',
-    corners: '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
-    plus: '<path d="M9 3.5h6V9h5.5v6H15v5.5H9V15H3.5V9H9z"/>',
+    freebie: '<rect x="4" y="10" width="16" height="10"/><path d="M3 7h18v3H3zM12 7v13M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"/>',
+    center: '<rect x="3.5" y="3.5" width="17" height="17"/><circle cx="12" cy="12" r="3" fill="currentColor"/>',
     safetynet: '<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="15" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+    piggy: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M14.5 9.5c-.6-.8-1.5-1.1-2.5-1.1-1.4 0-2.4.7-2.4 1.8 0 2.6 5 1.4 5 4 0 1.1-1.1 1.9-2.6 1.9-1 0-2-.4-2.6-1.2"/>',
+    haggler: '<path d="M3.5 12V4.5H11l9.5 9.5-7 7z"/><circle cx="8" cy="9" r="1.3"/>',
     heartup: '<path d="M12 20s-8-4.8-8-10.5A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.5C20 15.2 12 20 12 20z"/><path d="M12 10.5v5M9.5 13h5"/>',
     ironheart: '<path d="M12 3l7 3v6c0 4.2-3 7.2-7 9-4-1.8-7-4.8-7-9V6z"/>',
     secondlife: '<path d="M12 20s-8-4.8-8-10.5A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.5C20 15.2 12 20 12 20z"/><path d="M8 13h2l1.2-2.5 1.6 4 1.2-1.5H16"/>',
-    piggy: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M14.5 9.5c-.6-.8-1.5-1.1-2.5-1.1-1.4 0-2.4.7-2.4 1.8 0 2.6 5 1.4 5 4 0 1.1-1.1 1.9-2.6 1.9-1 0-2-.4-2.6-1.2"/>',
-    haggler: '<path d="M3.5 12V4.5H11l9.5 9.5-7 7z"/><circle cx="8" cy="9" r="1.3"/>',
-    battery: '<rect x="3" y="8" width="16" height="8" rx="1.5"/><path d="M21 11v2M7 11v2M11 11v2M15 11v2"/>',
-    overplay: '<path d="M5 5l7 7-7 7M12 5l7 7-7 7"/>',
-    freepass: '<path d="M3.5 8h17v3a2 2 0 0 0 0 4v3h-17v-3a2 2 0 0 0 0-4z"/><path d="M14 8v10" stroke-dasharray="2 2"/>',
-    castingvote: '<rect x="4" y="12" width="16" height="8"/><path d="M8 12V9l4-4 4 4v3M9.5 16h5"/>',
-    sneak: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><path d="M4 4l16 16"/>'
+    hint: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+    rewind: '<path d="M4 12a8 8 0 1 0 2.6-5.9M4 3.5V8h4.5"/>',
+    corners: '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
+    plus: '<path d="M9 3.5h6V9h5.5v6H15v5.5H9V15H3.5V9H9z"/>',
+    battery: '<rect x="3" y="8" width="16" height="8" rx="1.5"/><path d="M21 11v2M7 11v2M11 11v2M15 11v2"/>'
   };
   var HEART = '<path d="M12 20s-8-4.8-8-10.5A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8 2.5C20 15.2 12 20 12 20z"/>';
-  var XM = '<svg class="m" viewBox="0 0 40 40" aria-hidden="true"><path d="M8 8L32 32"/><path d="M32 8L8 32"/></svg>';
-  var OM = '<svg class="m" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="12.5"/></svg>';
-  var STONE = '<svg class="m" viewBox="0 0 40 40" aria-hidden="true"><rect x="7" y="7" width="26" height="26" rx="3"/><path d="M11 29L29 11M11 21L21 11M19 29L29 19"/></svg>';
-  var BIGX = '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 6L34 34M34 6L6 34"/></svg>';
-  var BIGO = '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15"/></svg>';
+  var ARROW_L = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+  var ARROW_R = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+  var LOCK = '<svg class="lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
   function ic(id) { return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[id] || '') + '</svg>'; }
-  function info(id) { return G.RELICS[id] || G.TRICKS[id] || G.COUNTERS[id] || { name: id, desc: '' }; }
 
   /* ---------- shared pieces ---------- */
   function whereText(r) { return 'Act ' + r.act + ' · ' + (r.idx === 3 ? 'Boss' : 'Match ' + (r.idx + 1) + ' of 3'); }
@@ -1173,252 +1446,301 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Game;
     var cur = (run.act - 1) * 4 + run.idx, out = '<div class="strip" role="img" aria-label="Run progress, ' + whereText(run) + '">';
     for (var a = 1; a <= 3; a++) {
       out += '<div class="act"><span class="al">A' + a + '</span>';
-      for (var k = 0; k < 4; k++) {
-        var n = (a - 1) * 4 + k;
-        out += '<i class="' + (k === 3 ? 'boss ' : '') + (n < cur ? 'done' : (n === cur ? 'now' : '')) + '"></i>';
-      }
+      for (var k = 0; k < 4; k++) { var n = (a - 1) * 4 + k; out += '<i class="' + (k === 3 ? 'boss ' : '') + (n < cur ? 'done' : (n === cur ? 'now' : '')) + '"></i>'; }
       out += '</div>';
     }
     return out + '</div>';
   }
-  function maxCharges(id) { return (G.RELICS[id].charges || 0) + (G.has(run, 'battery') ? 1 : 0); }
   function pips(n, max) { var s = ''; for (var i = 0; i < max; i++) s += '<i class="' + (i < n ? 'on' : '') + '"></i>'; return '<span class="pips" aria-hidden="true">' + s + '</span>'; }
+  function setChip(set, count) {
+    if (!set) return '';
+    var dots = ''; for (var i = 0; i < 3; i++) dots += i < count ? '●' : '○';
+    return '<span class="set s-' + set + '">' + G.SETS[set].name + (count !== undefined ? ' <b>' + dots + '</b>' : '') + '</span>';
+  }
+  function useTag(id) { var r = G.RELICS[id]; return r.kind === 'active' ? 'Button · ' + r.charges + (r.charges > 1 ? ' uses' : ' use') + ' per act' : 'Automatic'; }
 
-  /* ---------- screens ---------- */
+  /* ---------- title ---------- */
   function screenTitle() {
-    var b = ui.best, s = ui.saved;
-    var farthest = b.farthest ? 'Furthest so far: act ' + (Math.floor((b.farthest - 1) / 4) + 1) + ', ' + (((b.farthest - 1) % 4) === 3 ? 'boss' : 'match ' + (((b.farthest - 1) % 4) + 1)) + (b.victories ? ' · ' + b.victories + (b.victories === 1 ? ' run cleared' : ' runs cleared') : '') : '';
+    var m = ui.meta, s = ui.saved;
+    var progress = m.farthest ? 'Furthest: act ' + (Math.floor((m.farthest - 1) / 4) + 1) + (m.victories ? ' · ' + m.victories + (m.victories === 1 ? ' run cleared' : ' runs cleared') : '') : '';
     return '<section class="hero">' +
       '<div class="logo" aria-hidden="true"><span class="lx">X</span><span class="lo">O</span><span class="lx2">X</span></div>' +
-      '<h1 class="sub-logo mono" style="font-size:13px;font-weight:600;letter-spacing:.14em">XOX Rogue</h1>' +
-      '<p class="lede">Tic-tac-toe against an AI that never blunders. You cannot outplay it, so out-build it.</p>' +
+      '<h1 class="sub-logo mono">XOX Rogue</h1>' +
+      '<p class="lede">Pick a character, collect relics, and break an AI that never blunders.</p>' +
       '<div class="stack">' +
         '<button class="btn primary block" data-act="new">Start a run</button>' +
-        (s ? '<button class="btn block" data-act="continue">Continue run <small>' + whereText(s) + '</small></button>' : '') +
+        (s ? '<button class="btn block" data-act="continue">Continue run <small>' + G.CHARS[s.char].name + ' · ' + whereText(s) + '</small></button>' : '') +
       '</div>' +
-      (farthest ? '<p class="mono" style="text-align:center">' + farthest + '</p>' : '') +
+      '<p class="mono center">' + m.unlocked.length + ' of 5 characters unlocked' + (progress ? ' · ' + progress : '') + '</p>' +
       '<div class="rules">' +
-        '<p><b>Four in a row wins</b> on a 5×5 board. You move first. A plain game is a draw.</p>' +
-        '<p><b>Relics bend the rules.</b> Their charges refill at the start of each act, so spend them where they count.</p>' +
-        '<p><b>Win matches to earn gold</b> and buy more relics. Hearts run out when you draw or lose.</p>' +
-        '<p><b>Each act ends in Super XOX:</b> nine small boards, where your move sends the boss to the matching board.</p>' +
+        '<p><b>Four in a row wins</b> on a 5×5 board. Pick your opponent before each match.</p>' +
+        '<p><b>Relics come in sets.</b> Own 2 or 3 of a set for a bonus.</p>' +
+        '<p><b>Each act ends with a boss</b> that plays a different game: Speed Round, Gravity, then Super XOX.</p>' +
       '</div></section>';
   }
 
-  function useTag(id) {
-    var r = G.RELICS[id];
-    if (!r) return 'Boss trick';
-    return r.kind === 'active' ? 'Button \u00B7 ' + r.charges + (r.charges > 1 ? ' uses' : ' use') + ' per act' : 'Automatic';
+  /* ---------- character carousel ---------- */
+  function charCard(id) {
+    var c = G.CHARS[id], locked = ui.meta.unlocked.indexOf(id) < 0;
+    return '<article class="cc' + (locked ? ' locked' : '') + '" aria-label="' + c.name + (locked ? ', locked' : '') + '">' +
+      '<div class="cc-glyph">' + gl(id, 'gl') + (locked ? LOCK : '') + '</div>' +
+      '<h3>' + c.name + '</h3>' +
+      '<p class="cc-trait">' + (locked ? esc(c.unlock) + ' to unlock.' : c.trait) + '</p>' +
+      '<div class="cc-start">' + c.start.map(function (r) { return '<span class="mini">' + ic(r) + G.RELICS[r].name + '</span>'; }).join('') + '</div>' +
+      '<div class="cc-set"><span class="tag-line">Set</span> ' + setChip(c.set) + '</div>' +
+      '</article>';
   }
-
-  function relicCardBtn(id, act, label) {
-    var r = info(id);
-    return '<button class="card" data-act="' + act + '" data-id="' + id + '">' + ic(id) +
-      '<span class="body"><h3>' + r.name + '</h3><p>' + r.desc + '</p></span>' +
-      '<span class="foot"><span class="tag-line">' + useTag(id) + '</span><span class="btn sm primary" aria-hidden="true">' + label + '</span></span></button>';
-  }
-
-  function screenStarter() {
+  function screenChar() {
+    var ids = G.CHAR_ORDER;
     return header('New run') +
-      '<h2>Pick your first relic</h2>' +
-      '<p>Each one is a way to beat the AI. You can buy more after every win.</p>' +
-      '<div class="cards">' + run.starters.map(function (id) { return relicCardBtn(id, 'starter', 'Take'); }).join('') + '</div>';
+      '<h2>Choose your character</h2>' +
+      '<div class="car">' +
+        '<button class="car-arrow prev" data-act="carprev" aria-label="Previous character">' + ARROW_L + '</button>' +
+        '<div class="car-view" id="carview" tabindex="0" role="group" aria-roledescription="carousel" aria-label="Characters">' +
+          '<div class="car-track" id="cartrack">' + ids.map(charCard).join('') + '</div>' +
+        '</div>' +
+        '<button class="car-arrow next" data-act="carnext" aria-label="Next character">' + ARROW_R + '</button>' +
+      '</div>' +
+      '<div class="car-dots" id="cardots">' + ids.map(function (id, i) { return '<button data-act="cardot" data-i="' + i + '" aria-label="' + G.CHARS[id].name + '"></button>'; }).join('') + '</div>' +
+      '<button class="btn primary block" id="carpick" data-act="pickchar">Play</button>' +
+      '<p class="tag-line center">Swipe or use the arrows.</p>';
+  }
+  function setChar(i, animate) {
+    var n = G.CHAR_ORDER.length;
+    ui.charIdx = (i + n) % n;
+    var track = document.getElementById('cartrack'); if (!track) return;
+    track.style.transition = animate === false ? 'none' : '';
+    track.style.transform = 'translateX(' + (-100 * ui.charIdx) + '%)';
+    var dots = document.querySelectorAll('#cardots button');
+    for (var k = 0; k < dots.length; k++) dots[k].setAttribute('aria-current', k === ui.charIdx ? 'true' : 'false');
+    var cards = track.children;
+    for (var j = 0; j < cards.length; j++) cards[j].setAttribute('aria-hidden', j === ui.charIdx ? 'false' : 'true');
+    var id = G.CHAR_ORDER[ui.charIdx], locked = ui.meta.unlocked.indexOf(id) < 0, btn = document.getElementById('carpick');
+    btn.disabled = locked;
+    btn.textContent = locked ? 'Locked' : 'Play as ' + G.CHARS[id].name;
+  }
+  function bindCarousel() {
+    var view = document.getElementById('carview'); if (!view) return;
+    var track = document.getElementById('cartrack'), x0 = null, dx = 0, w = 1;
+    setChar(ui.charIdx, false);
+    view.addEventListener('pointerdown', function (e) { x0 = e.clientX; dx = 0; w = view.clientWidth || 1; track.style.transition = 'none'; try { view.setPointerCapture(e.pointerId); } catch (er) { /* ignore */ } });
+    view.addEventListener('pointermove', function (e) {
+      if (x0 === null) return;
+      dx = e.clientX - x0;
+      track.style.transform = 'translateX(calc(' + (-100 * ui.charIdx) + '% + ' + dx + 'px))';
+    });
+    function end() {
+      if (x0 === null) return;
+      x0 = null; track.style.transition = '';
+      if (Math.abs(dx) > Math.min(60, w * 0.18)) setChar(ui.charIdx + (dx < 0 ? 1 : -1)); else setChar(ui.charIdx);
+    }
+    view.addEventListener('pointerup', end); view.addEventListener('pointercancel', end);
+    view.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { setChar(ui.charIdx + 1); e.preventDefault(); }
+      if (e.key === 'ArrowLeft') { setChar(ui.charIdx - 1); e.preventDefault(); }
+    });
   }
 
-  function ownedRelics() {
+  /* ---------- build panel ---------- */
+  function buildPanel() {
     if (!run.relics.length) return '';
-    return '<div class="stack"><p class="mono">Your relics</p><div class="tray">' + run.relics.map(function (id) {
+    var lv = G.setLevels(run), sets = Object.keys(G.SETS).filter(function (s) { return lv[s] > 0; });
+    var out = '<div class="stack"><p class="mono">Your build</p><div class="tray">' + run.relics.map(function (id) {
       var r = G.RELICS[id], act = r.kind === 'active';
-      return '<div class="relic ' + (act ? '' : 'passive') + '" style="cursor:default">' + ic(id) + '<span class="t"><span class="rn">' + r.name + '</span>' + (act ? pips(run.charges[id] || 0, maxCharges(id)) : '<span class="pl">Automatic</span>') + '</span></div>';
-    }).join('') + '</div></div>';
-  }
-
-  function screenBriefing() {
-    var boss = run.idx === 3, out = header(whereText(run)) + strip();
-    if (!boss) {
-      out += '<h2>' + whereText(run) + '</h2>';
-      if (run.counters.length) {
-        out += '<div class="stack"><p class="mono">AI relics this match</p><div class="cards">' + run.counters.map(function (id) {
-          return '<div class="card counter"><span class="body"><h3>' + G.COUNTERS[id].name + '</h3><p>' + G.COUNTERS[id].desc + '</p></span></div>';
-        }).join('') + '</div></div>';
-      } else {
-        out += '<p>The AI has no relics yet. Act 2 gives it one per match.</p>';
-      }
-      out += ownedRelics() + '<button class="btn primary block" data-act="startmatch">Start match</button>';
-    } else {
-      var b = G.BOSSES[run.act - 1];
-      out += '<h2>Boss: ' + b.name + '</h2>' +
-        '<div class="card boss"><span class="body"><p class="tag-line">Super XOX</p><p style="color:var(--ink);font-size:16px">Nine small boards. Win three in a row to win the match. The square you play in sends the boss to the board in the same position. ' + b.blurb + '</p></span></div>' +
-        '<div class="stack"><p class="mono">Pick one trick for this fight</p><div class="cards">' + run.trickChoices.map(function (id) {
-          var t = G.TRICKS[id], on = run.trick === id;
-          return '<button class="card" data-act="trick" data-id="' + id + '" aria-pressed="' + on + '">' + ic(id) + '<span class="body"><h3>' + t.name + '</h3><p>' + t.desc + '</p></span></button>';
-        }).join('') + '</div></div>' +
-        (run.relics.some(function (id) { return id === 'rewind' || id === 'hint'; }) ? '<p class="tag-line">Rewind and Hint also work here.</p>' : '') +
-        '<button class="btn primary block" data-act="startmatch"' + (run.trick ? '' : ' disabled') + '>' + (run.trick ? 'Start the boss fight' : 'Pick a trick first') + '</button>';
-    }
-    return out;
-  }
-
-  /* ----- 5x5 ----- */
-  function cellLabel(m, i) {
-    var b = 1 << i, st = 'empty';
-    if (m.b & b) st = 'blocked'; else if (m.x & b) st = 'your mark'; else if (m.o & b) st = 'AI mark';
-    return 'Row ' + (Math.floor(i / 5) + 1) + ', column ' + (i % 5 + 1) + ': ' + st;
-  }
-  function board5(m) {
-    var fresh = (m.x & ~ui.prevX) | (m.o & ~ui.prevO), out = '<div class="board5" role="group" aria-label="5 by 5 board">';
-    for (var i = 0; i < 25; i++) {
-      var b = 1 << i, cls = 'cell', inner = '';
-      if (m.b & b) { cls += ' stone'; inner = STONE; }
-      else if (m.x & b) { cls += ' x'; inner = XM; }
-      else if (m.o & b) { cls += ' o'; inner = OM; }
-      if (fresh & b) cls += ' fresh';
-      if (m.winMask & b) cls += ' win';
-      if (m.hint === i) cls += ' hint';
-      if (m.lastAI === i && (m.o & b) && !m.over) { cls += ' last'; inner += '<i class="dot"></i>'; }
-      out += '<button class="' + cls + '" data-act="cell" data-i="' + i + '" aria-label="' + cellLabel(m, i) + '">' + inner + '</button>';
-    }
+      return '<div class="relic static' + (act ? '' : ' passive') + '">' + ic(id) + '<span class="t"><span class="rn">' + r.name + '</span>' + (act ? pips(run.charges[id] || 0, G.maxCharges(run, id)) : '<span class="pl">Automatic</span>') + '</span></div>';
+    }).join('') + '</div>';
+    if (sets.length) out += '<div class="sets">' + sets.map(function (s) {
+      var S = G.SETS[s], n = lv[s];
+      return '<div class="setrow">' + setChip(s, n) + '<div><span class="' + (n >= 2 ? 'on' : '') + '">2: ' + S.b2 + '</span><span class="' + (n >= 3 ? 'on' : '') + '">3: ' + S.b3 + '</span></div></div>';
+    }).join('') + '</div>';
     return out + '</div>';
   }
 
+  /* ---------- briefing ---------- */
+  function screenBriefing() {
+    var out = header(whereText(run)) + strip();
+    if (run.idx < 3) {
+      out += '<h2>Pick your opponent</h2><div class="cards">' + run.choices.map(function (id) {
+        var o = G.OPPONENTS[id];
+        return '<button class="card opp" data-act="opp" data-id="' + id + '"><span class="oglyph">' + gl(id, 'gl') + '</span><span class="body"><h3>' + o.name + '</h3><p>' + o.desc + '</p></span>' +
+          '<span class="foot"><span class="tag-line">Win: +' + (2 + run.act) + ' gold</span><span class="btn sm primary" aria-hidden="true">Play</span></span></button>';
+      }).join('') + '</div>';
+    } else {
+      var b = G.BOSSES[run.act - 1];
+      out += '<div class="bosscard"><span class="oglyph big">' + gl(b.id, 'gl') + '</span><div class="body"><p class="tag-line">Boss · ' + b.title + '</p><h2>' + b.name + '</h2>' +
+        '<ul>' + b.rules.map(function (r) { return '<li>' + r + '</li>'; }).join('') + '</ul><p class="tag-line">All your relics work here.</p></div></div>' +
+        '<button class="btn primary block" data-act="startboss">Fight ' + b.name + '</button>';
+    }
+    return out + buildPanel();
+  }
+
+  /* ---------- match: chips ---------- */
+  function until(period, count) { return period - 1 - (count % period); }
+  function when(n, unit) { return n === 0 ? (unit === 'mark' ? 'next mark' : 'this turn') : 'in ' + n; }
+  function chipsHtml(m) {
+    var me = [], them = [];
+    if (m.perks.strike) me.push(['tempo', 'Double Strike: ' + when(until(G.strikeEvery(m), m.xTurns))]);
+    if (m.perks.spark) me.push(['fire', 'Spark: ' + when(until(5, m.xTurns))]);
+    if (m.perks.sleepy) { var k = 4 - (m.aiDue % 4); me.push(['frost', 'AI sleeps: ' + (k === 1 ? 'next turn' : 'in ' + k)]); }
+    if (m.char === 'ember') me.push(['fire', 'Burn: ' + when(until(4, m.xPlaced), 'mark')]);
+    if (m.char === 'twin') me.push(['tempo', 'Twin: ' + when(until(4, m.xPlaced), 'mark')]);
+    if (m.freeze) me.push(['frost', 'AI frozen']);
+    var o = m.opp;
+    if (o === 'gambler') them.push('Random move: ' + (until(3, m.aiTurns) === 0 ? 'next' : 'in ' + until(3, m.aiTurns)));
+    if (o === 'hoarder') them.push('Stone: ' + (until(3, m.aiTurns) === 0 ? 'next' : 'in ' + until(3, m.aiTurns)));
+    if (o === 'janitor') them.push('Erase: ' + (until(4, m.aiTurns) === 0 ? 'next' : 'in ' + until(4, m.aiTurns)));
+    if (o === 'napper') them.push(m.napDouble ? 'Plays twice next' : 'Nap: ' + (until(5, m.aiDue) === 0 ? 'next' : 'in ' + until(5, m.aiDue)));
+    if (o === 'avalanche') them.push('Floor falls in ' + (6 - (m.plies % 6)) + ' moves');
+    if (o === 'warden' && m.silenceLeft) them.push('Next button fizzles');
+    if (m.kind === 'super') them.push('Phase ' + m.phaseN + ' of 3');
+    if (!me.length && !them.length) return '';
+    return '<div class="chips">' + me.map(function (c) { return '<span class="chip s-' + c[0] + '">' + c[1] + '</span>'; }).join('') +
+      them.map(function (t) { return '<span class="chip enemy">' + t + '</span>'; }).join('') + '</div>';
+  }
+  function foeBar(m) {
+    var name, sub, glyph = m.opp;
+    if (m.boss) { var b = G.BOSSES[run.act - 1]; name = b.name; sub = b.title; }
+    else { name = G.OPPONENTS[m.opp].name; sub = G.OPPONENTS[m.opp].desc; }
+    var score = '';
+    if (m.series) score = '<div class="score"><span>Round ' + m.series.round + '</span><span>You <b class="cx">' + m.series.you + '</b></span><span>Them <b class="co">' + m.series.them + '</b></span></div>';
+    if (m.kind === 'super') score = '<div class="score"><span>First to 3</span><span>You <b class="cx">' + G.boardsWon(m.S, 1) + '</b></span><span>Boss <b class="co">' + G.boardsWon(m.S, 2) + '</b></span></div>';
+    return '<div class="foe"><span class="oglyph">' + gl(glyph, 'gl') + '</span><div class="body"><h3>' + name + '</h3><p class="tag-line">' + sub + '</p></div>' + score + '</div>';
+  }
+
+  /* ---------- match: status, tray, result ---------- */
   function statusHtml(m) {
     var text;
     if (run.phase === 'result') {
       var o = run.result;
-      if (o.boss) text = o.outcome === 'win' ? 'You took the boss down.' : 'The boss fight is over.';
+      if (o.boss) text = o.outcome === 'win' ? 'You beat the boss.' : 'The boss fight is over.';
       else if (m.over === 'win') text = 'You broke the draw.';
       else if (o.outcome === 'win') text = 'Counted as a win.';
-      else text = m.over === 'draw' ? 'No line left to win.' : 'The AI got four in a row.';
-    } else if (ui.thinking) text = '<span class="dots">The AI is thinking</span>';
+      else text = m.over === 'draw' ? 'No line left to win.' : 'The AI made its line.';
+    } else if (m.turn === 'pause') text = m.pauseRound === 'win' ? 'You take the round!' : (m.pauseRound === 'loss' ? 'The Referee takes the round.' : 'Round drawn. No point.');
+    else if (ui.thinking) text = '<span class="dots">' + (m.boss ? 'The boss is thinking' : 'The AI is thinking') + '</span>';
     else if (ui.msg) text = esc(ui.msg);
-    else if (m.kind === '5' && m.perks.strike && m.xTurns % 3 === 2) text = 'Double Strike turn: place 2 marks.';
-    else if (m.kind === '5') text = 'Your move. Four in a row wins.';
-    else if (m.extra > 0) text = 'Overplay: you move twice.';
-    else text = m.S.next >= 0 ? 'Play in the highlighted board.' : 'The boss sent you anywhere. Play on any open board.';
-    return '<div class="status" aria-live="polite"><p>' + text + '</p></div>';
+    else if (m.bonus) text = 'Place one more mark.';
+    else if (G.isStrikeTurn(m) && m.perks.strike) text = 'Double Strike turn: place 2 marks.';
+    else if (m.kind === 'super') text = m.S.next >= 0 ? 'Play in the highlighted board.' : 'Play on any open board.';
+    else if (m.g.gravity) text = 'Tap a column to drop your mark.';
+    else text = 'Your move. ' + m.g.k + ' in a row wins.';
+    var timer = m.timed && run.phase === 'match' && m.turn === 'X' && !m.over ? '<div class="tbar" aria-hidden="true"><i id="tbar"></i></div>' : '';
+    return '<div class="status" aria-live="polite"><p>' + text + '</p></div>' + timer;
   }
-
   function trayHtml(m) {
-    var live = run.phase === 'match' && m.turn === 'X' && !m.over && !ui.thinking, items = [];
-    if (m.kind === '5') {
-      run.relics.forEach(function (id) {
-        var r = G.RELICS[id];
-        if (r.kind === 'active') items.push({ id: id, active: true, n: m.charges[id] || 0, max: maxCharges(id) });
-        else items.push({ id: id, active: false });
-      });
-    } else {
-      if (m.trick === 'overplay' || m.trick === 'freepass') items.push({ id: m.trick, active: true, n: m.charges[m.trick] || 0, max: 1 + (G.has(run, 'battery') ? 1 : 0) });
-      else if (m.trick) items.push({ id: m.trick, active: false, trick: true });
-      ['rewind', 'hint'].forEach(function (id) { if (m.charges[id] !== undefined) items.push({ id: id, active: true, n: m.charges[id], max: maxCharges(id) }); });
-    }
-    if (!items.length) return '';
-    return '<div class="tray">' + items.map(function (it) {
-      var r = info(it.id), empty = it.active && it.n < 1;
-      var armed = (it.id === 'freeze' && m.kind === '5' && m.freeze > 0) || (it.id === 'overplay' && m.kind === 'boss' && m.extra > 0);
-      return '<button class="relic' + (it.active ? '' : ' passive') + (empty ? ' empty' : '') + '" data-act="relic" data-id="' + it.id + '" aria-pressed="' + (armed ? 'true' : 'false') + '" title="' + esc(r.desc) + '"' + (it.active && !live ? ' aria-disabled="true"' : '') + '>' +
-        ic(it.id) + '<span class="t"><span class="rn">' + r.name + '</span>' + (it.active ? pips(it.n, it.max) : '<span class="pl">' + (it.trick ? 'Boss trick' : 'Automatic') + '</span>') + '</span></button>';
+    var live = run.phase === 'match' && m.turn === 'X' && !m.over && !ui.thinking;
+    return '<div class="tray">' + run.relics.map(function (id) {
+      var r = G.RELICS[id], act = r.kind === 'active', n = m.charges[id] || 0, off = r.only === 'grid' && m.kind !== 'grid';
+      var armed = id === 'freeze' && m.freeze > 0;
+      return '<button class="relic' + (act ? '' : ' passive') + (act && n < 1 ? ' empty' : '') + (off ? ' off' : '') + '" data-act="relic" data-id="' + id + '" aria-pressed="' + armed + '"' + (act && !live ? ' aria-disabled="true"' : '') + '>' +
+        ic(id) + '<span class="t"><span class="rn">' + r.name + '</span>' + (act ? pips(n, G.maxCharges(run, id)) : '<span class="pl">' + (off ? 'Not in this game' : 'Automatic') + '</span>') + '</span></button>';
     }).join('') + '</div>';
   }
-
   function nextLabel() {
     var o = run.result;
     if (run.hearts <= 0) return 'See results';
-    if (o.boss && o.outcome === 'win') return 'Choose a relic';
+    if (o.boss && o.outcome === 'win') return run.act === 3 ? 'See results' : 'Choose a relic';
     if (!o.boss && o.outcome === 'win') return 'Visit the shop';
-    if (run.idx === 3 && run.act === 3) return 'See results';
     return run.idx === 2 ? 'On to the boss' : 'Next match';
   }
   function resultHtml() {
     var o = run.result, win = o.outcome === 'win', rows = '', bonus = 0;
     o.bonuses.forEach(function (b) { bonus += b[1]; });
-    if (o.gold) rows += '<div><span>' + (o.boss ? 'Boss reward' : 'Match won') + '</span><span class="v">+' + (o.gold - bonus) + ' gold</span></div>';
+    if (o.gold - bonus > 0) rows += '<div><span>' + (o.boss ? 'Boss reward' : 'Match won') + '</span><span class="v">+' + (o.gold - bonus) + ' gold</span></div>';
     o.bonuses.forEach(function (b) { rows += '<div><span>' + b[0] + '</span><span class="v">+' + b[1] + ' gold</span></div>'; });
     if (o.hearts) rows += '<div><span>Hearts lost</span><span class="v">−' + o.hearts + '</span></div>';
-    if (!o.gold && !o.hearts) rows += '<div><span>' + (o.outcome === 'draw' ? 'Act 1 draws cost nothing.' : '') + '</span><span class="v"></span></div>';
-    o.notes.forEach(function (n) { rows += '<div><span class="n">' + esc(n) + '</span><span class="v"></span></div>'; });
+    if (!o.gold && !o.hearts && o.outcome === 'draw') rows += '<div><span class="n">Act 1 draws cost nothing.</span></div>';
+    o.notes.forEach(function (n) { rows += '<div><span class="n">' + esc(n) + '</span></div>'; });
+    if (o.unlockNew) rows += '<div class="unlock">' + gl(o.unlock, 'gl') + '<span>New character unlocked: <b>' + G.CHARS[o.unlock].name + '</b></span></div>';
     var title = o.boss ? (win ? 'Boss beaten' : (o.outcome === 'draw' ? 'Boss held on' : 'The boss wins')) : (win ? 'You won' : (o.outcome === 'draw' ? 'Draw' : 'You lost'));
     return '<div class="result ' + (win ? '' : 'loss') + '"><h2>' + title + '</h2><div class="lines">' + rows + '</div>' +
       '<button class="btn primary block" data-act="next">' + nextLabel() + '</button></div>';
   }
-
-  function counterBar(m) {
-    var out = '';
-    if (m.counters && m.counters.length) out += '<div class="chips"><span class="mono">AI relics</span>' + m.counters.map(function (id) { return '<span class="chip" title="' + esc(G.COUNTERS[id].desc) + '">' + G.COUNTERS[id].name + '</span>'; }).join('') + '</div>';
-    var p = [];
-    if (m.perks && m.perks.strike) { var n = (3 - m.xTurns % 3) % 3; p.push('Double Strike: ' + (n === 0 ? 'this turn' : 'in ' + n)); }
-    if (m.perks && m.perks.sleepy) { var k = 4 - (m.aiDue % 4); p.push('AI sleeps: ' + (k === 1 ? 'next turn' : 'in ' + k)); }
-    if (p.length) out += '<div class="chips">' + p.map(function (t) { return '<span class="chip good">' + t + '</span>'; }).join('') + '</div>';
-    return out;
+  function pauseHtml(m) {
+    var s = m.series;
+    return '<div class="result' + (m.pauseRound === 'loss' ? ' loss' : '') + '"><h2>Round ' + s.round + ': ' + (m.pauseRound === 'win' ? 'yours' : (m.pauseRound === 'loss' ? 'theirs' : 'draw')) + '</h2>' +
+      '<p>You ' + s.you + ' · Them ' + s.them + '. First to ' + s.toWin + ' wins. Your buttons refill.</p>' +
+      '<button class="btn primary block" data-act="round">Next round</button></div>';
   }
 
-  function screenMatch5() {
-    var m = run.match;
-    return header(whereText(run)) + strip() + counterBar(m) + statusHtml(m) + board5(m) +
-      (run.phase === 'result' ? resultHtml() : trayHtml(m));
+  /* ---------- boards ---------- */
+  function boardGrid(m) {
+    var g = m.g, fresh = (m.x & ~ui.prevX) | (m.o & ~ui.prevO), live = run.phase === 'match' && m.turn === 'X' && !m.over && !ui.thinking;
+    var leg = live && g.gravity ? G.legal(m) : 0;
+    var out = '<div class="board5 w' + g.w + (ui.quake ? ' quake' : '') + (g.gravity ? ' grav' : '') + '" role="group" aria-label="' + g.w + ' by ' + g.h + ' board" style="grid-template-columns:repeat(' + g.w + ',1fr)">';
+    for (var i = 0; i < g.nc; i++) {
+      var b = 1 << i, cls = 'cell', inner = '', st = 'empty';
+      if (m.b & b) { cls += ' stone'; inner = STONE; st = 'stone'; }
+      else if (m.x & b) { cls += ' x'; inner = gl(m.char); st = 'your mark'; }
+      else if (m.o & b) { cls += ' o'; inner = gl(m.opp); st = 'their mark'; }
+      if (fresh & b) cls += ' fresh';
+      if (m.winMask & b) cls += ' win';
+      if (m.hint === i) cls += ' hint';
+      if (leg & b) cls += ' legal';
+      if (m.lastAI === i && (m.o & b) && !m.over) { cls += ' last'; inner += '<i class="dot"></i>'; }
+      var r = Math.floor(i / g.w) + 1, c = i % g.w + 1;
+      var lab = g.gravity ? 'Column ' + c + ', row ' + r + ': ' + st : 'Row ' + r + ', column ' + c + ': ' + st;
+      out += '<button class="' + cls + '" data-act="cell" data-i="' + i + '" aria-label="' + lab + '">' + inner + '</button>';
+    }
+    return out + '</div>';
   }
-
-  /* ----- boss (Super XOX) ----- */
-  function board9(m) {
-    var S = m.S, myTurn = run.phase === 'match' && m.turn === 'X' && !m.over && !ui.thinking;
-    var legal = {};
-    if (myTurn) E.superMoves(S).forEach(function (mv) { legal[mv[0] * 9 + mv[1]] = 1; });
+  function boardSuper(m) {
+    var S = m.S, live = run.phase === 'match' && m.turn === 'X' && !m.over && !ui.thinking, legal = {};
+    if (live) E.superMoves(S).forEach(function (mv) { legal[mv[0] * 9 + mv[1]] = 1; });
     var out = '<div class="board9' + (ui.boardTurn ? ' turn' : '') + '" role="group" aria-label="Super XOX board">';
     for (var b = 0; b < 9; b++) {
       var res = S.res[b], cls = 'sub';
       if (res === 1) cls += ' won wx'; else if (res === 2) cls += ' won wo'; else if (res === 3) cls += ' dead';
       else if (!m.over && (S.next < 0 || S.next === b)) cls += S.next < 0 ? ' free' : ' live';
-      out += '<div class="' + cls + '" data-b="' + b + '">';
-      if (S.cursed === b) out += '<span class="badge">CURSED</span>';
+      out += '<div class="' + cls + '">';
       for (var c = 0; c < 9; c++) {
         var bit = 1 << c, ccls = 'cell', inner = '';
-        if (S.bx[b] & bit) { ccls += ' x'; inner = XM; } else if (S.bo[b] & bit) { ccls += ' o'; inner = OM; }
+        if (S.bx[b] & bit) { ccls += ' x'; inner = gl(m.char); } else if (S.bo[b] & bit) { ccls += ' o'; inner = gl(m.opp); }
         if (legal[b * 9 + c]) ccls += ' legal';
-        if (m.lastAI && m.lastAI.b === b && m.lastAI.c === c && !m.over) { ccls += ' last'; inner += '<i class="dot" style="top:3px;left:3px;width:6px;height:6px"></i>'; }
+        if (m.lastAI && m.lastAI.b === b && m.lastAI.c === c && !m.over) { ccls += ' last'; inner += '<i class="dot sm"></i>'; }
         if (m.hint && m.hint[0] === b && m.hint[1] === c) ccls += ' hint';
-        var lab = 'Board ' + (b + 1) + ', square ' + (c + 1) + (S.bx[b] & bit ? ': your mark' : (S.bo[b] & bit ? ': boss mark' : ''));
-        out += '<button class="' + ccls + '" data-act="cell9" data-b="' + b + '" data-c="' + c + '" aria-label="' + lab + '">' + inner + '</button>';
+        out += '<button class="' + ccls + '" data-act="cell9" data-b="' + b + '" data-c="' + c + '" aria-label="Board ' + (b + 1) + ', square ' + (c + 1) + (S.bx[b] & bit ? ': your mark' : (S.bo[b] & bit ? ': boss mark' : '')) + '">' + inner + '</button>';
       }
-      if (res === 1) out += '<span class="big">' + BIGX + '</span>'; else if (res === 2) out += '<span class="big">' + BIGO + '</span>'; else if (res === 3) out += '<span class="big">draw</span>';
+      if (res === 1) out += '<span class="big">' + gl(m.char) + '</span>'; else if (res === 2) out += '<span class="big">' + gl(m.opp) + '</span>'; else if (res === 3) out += '<span class="big txt">draw</span>';
       out += '</div>';
     }
     return out + '</div>';
   }
-  function screenBoss() {
-    var m = run.match, S = m.S, nx = 0, no = 0;
-    for (var i = 0; i < 9; i++) { if (S.res[i] === 1) nx++; else if (S.res[i] === 2) no++; }
-    return header(whereText(run)) + strip() +
-      '<div class="boss-head"><h3>' + m.boss.name + '</h3><div class="score"><span>You <b style="color:var(--x)">' + nx + '</b></span><span>Boss <b style="color:var(--o)">' + no + '</b></span></div></div>' +
-      '<p class="tag-line" style="margin-top:-8px">' + m.boss.blurb + '</p>' +
-      statusHtml(m) + board9(m) + (run.phase === 'result' ? resultHtml() : trayHtml(m));
+  function screenMatch() {
+    var m = run.match;
+    var bottom = run.phase === 'result' ? resultHtml() : (m.turn === 'pause' ? pauseHtml(m) : trayHtml(m));
+    return header(whereText(run)) + strip() + foeBar(m) + chipsHtml(m) + statusHtml(m) + (m.kind === 'grid' ? boardGrid(m) : boardSuper(m)) + bottom;
   }
 
-  /* ----- shop, reward, end ----- */
+  /* ---------- shop, reward, end ---------- */
+  function relicCard(id, act, label, price) {
+    var r = G.RELICS[id], n = r.set ? G.setCount(run, r.set) : 0;
+    var btn = price === undefined ? '<span class="btn sm primary" aria-hidden="true">' + label + '</span>'
+      : '<button class="btn sm primary" data-act="buy" data-id="' + id + '"' + (run.gold >= price ? '' : ' disabled') + '>' + (price === 0 ? 'Free' : 'Buy · ' + price + ' gold') + '</button>';
+    var inner = ic(id) + '<span class="body"><h3>' + r.name + '</h3><p>' + r.desc + '</p></span>' +
+      '<span class="foot"><span class="tags">' + (r.set ? setChip(r.set, n + 1) : '') + '<span class="tag-line">' + useTag(id) + '</span></span>' + btn + '</span>';
+    return price === undefined ? '<button class="card" data-act="' + act + '" data-id="' + id + '">' + inner + '</button>' : '<div class="card static">' + inner + '</div>';
+  }
   function screenShop() {
-    var cards = run.shop.map(function (id) {
-      var r = G.RELICS[id], p = G.priceOf(run, id), can = run.gold >= p;
-      return '<div class="card static">' + ic(id) + '<span class="body"><h3>' + r.name + '</h3><p>' + r.desc + '</p></span><span class="foot"><span class="tag-line">' + useTag(id) + '</span>' +
-        '<button class="btn sm primary" data-act="buy" data-id="' + id + '"' + (can ? '' : ' disabled') + '>Buy · ' + p + ' gold</button></span></div>';
-    }).join('');
     var hp = G.healPrice(run), canHeal = run.hearts < run.maxHearts && run.gold >= hp;
     return header('Shop') + '<h2>Shop</h2>' +
-      '<p>' + (run.shop.length ? 'Buy what you can afford. Unsold relics are gone when you leave.' : 'You bought everything on offer.') + '</p>' +
-      '<div class="cards">' + cards + '</div>' +
-      '<div class="card static" style="grid-template-columns:1fr"><span class="body"><h3>Heal a heart</h3><p>' + (run.hearts >= run.maxHearts ? 'Your hearts are full.' : 'Hearts: ' + run.hearts + ' of ' + run.maxHearts + '.') + '</p></span><span class="foot"><span></span><button class="btn sm" data-act="heal"' + (canHeal ? '' : ' disabled') + '>Heal · ' + hp + ' gold</button></span></div>' +
+      '<p>' + (run.shop.length ? (run.freeBuy ? 'Luck set: your first buy is free.' : 'Set tags show what you would own after buying.') : 'You bought everything on offer.') + '</p>' +
+      '<div class="cards">' + run.shop.map(function (id) { return relicCard(id, null, null, G.priceOf(run, id)); }).join('') + '</div>' +
+      '<div class="card static plain"><span class="body"><h3>Heal a heart</h3><p>' + (run.hearts >= run.maxHearts ? 'Your hearts are full.' : 'Hearts: ' + run.hearts + ' of ' + run.maxHearts + '.') + '</p></span><span class="foot"><span></span><button class="btn sm" data-act="heal"' + (canHeal ? '' : ' disabled') + '>Heal · ' + hp + ' gold</button></span></div>' +
       (ui.msg ? '<p class="tag-line" aria-live="polite">' + esc(ui.msg) + '</p>' : '') +
-      ownedRelics() +
-      '<button class="btn primary block" data-act="leave">Leave the shop</button>';
+      buildPanel() + '<button class="btn primary block" data-act="leave">Leave the shop</button>';
   }
   function screenReward() {
     return header('Boss reward') + '<h2>Pick a relic</h2><p>Free, for beating the boss.</p>' +
-      '<div class="cards">' + run.reward.map(function (id) { return relicCardBtn(id, 'reward', 'Take'); }).join('') + '</div>';
+      '<div class="cards">' + run.reward.map(function (id) { return relicCard(id, 'reward', 'Take'); }).join('') + '</div>' + buildPanel();
   }
   function screenEnd() {
     var won = run.over === 'won', s = run.stats;
-    return '<h2>' + (won ? 'Run cleared' : 'Out of hearts') + '</h2>' +
-      '<p>' + (won ? 'You beat all three bosses with ' + run.hearts + (run.hearts === 1 ? ' heart' : ' hearts') + ' left.' : 'You fell in ' + whereText(run).replace(' · ', ', ').toLowerCase() + '.') + '</p>' +
+    return '<div class="endhead">' + gl(run.char, 'gl') + '<div><p class="tag-line">' + G.CHARS[run.char].name + '</p><h2>' + (won ? 'Run cleared' : 'Out of hearts') + '</h2></div></div>' +
+      '<p>' + (won ? 'You beat all three bosses.' : 'You fell in ' + whereText(run).replace(' · ', ', ').toLowerCase() + '.') + '</p>' +
+      (run.result && run.result.unlockNew ? '<div class="result"><div class="unlock">' + gl(run.result.unlock, 'gl') + '<span>New character unlocked: <b>' + G.CHARS[run.result.unlock].name + '</b></span></div></div>' : '') +
       '<div class="result' + (won ? '' : ' loss') + '"><dl class="sum">' +
       '<dt>Matches played</dt><dd>' + s.matches + '</dd><dt>Wins</dt><dd>' + s.wins + '</dd><dt>Draws</dt><dd>' + s.draws + '</dd><dt>Losses</dt><dd>' + s.losses + '</dd><dt>Bosses beaten</dt><dd>' + s.bossWins + ' of 3</dd><dt>Relics</dt><dd>' + run.relics.length + '</dd></dl></div>' +
-      (run.relics.length ? '<p class="tag-line">' + run.relics.map(function (id) { return G.RELICS[id].name; }).join(' · ') + '</p>' : '') +
       '<div class="stack"><button class="btn primary block" data-act="new">Start a new run</button><button class="btn block" data-act="menu">Back to title</button></div>';
   }
 
@@ -1427,9 +1749,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Game;
     var html;
     if (!run) html = screenTitle();
     else switch (run.phase) {
-      case 'starter': html = screenStarter(); break;
+      case 'char': html = screenChar(); break;
       case 'briefing': html = screenBriefing(); break;
-      case 'match': case 'result': html = run.match ? (run.match.kind === '5' ? screenMatch5() : screenBoss()) : screenTitle(); break;
+      case 'match': case 'result': html = run.match ? screenMatch() : screenTitle(); break;
       case 'shop': html = screenShop(); break;
       case 'reward': html = screenReward(); break;
       case 'end': html = screenEnd(); break;
@@ -1437,30 +1759,54 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Game;
     }
     app.innerHTML = '<div class="shell">' + html + '</div>';
     var m = run && run.match;
-    if (m && m.kind === '5') { ui.prevX = m.x; ui.prevO = m.o; } else { ui.prevX = 0; ui.prevO = 0; }
-    if (m) m.rotatedNow = false;
-    ui.boardTurn = false;
+    if (m && m.kind === 'grid') { ui.prevX = m.x; ui.prevO = m.o; } else { ui.prevX = 0; ui.prevO = 0; }
+    ui.boardTurn = false; ui.quake = false;
+    if (run && run.phase === 'char') bindCarousel();
     var key = run ? run.phase + ':' + run.act + ':' + run.idx : 'title';
     if (key !== ui.screenKey) { ui.screenKey = key; try { window.scrollTo(0, 0); } catch (e) { /* ignore */ } }
+    syncTimer();
+  }
+
+  /* Speed Round move timer: when it runs out, a random legal move is played for you */
+  function syncTimer() {
+    var m = run && run.match, on = m && m.timed && run.phase === 'match' && m.turn === 'X' && !m.over && !ui.thinking;
+    if (!on) { if (ui.timer) { clearInterval(ui.timer); ui.timer = null; } ui.timerKey = ''; return; }
+    var key = m.series.round + ':' + m.xTurns + ':' + m.bonus + ':' + m.x;
+    if (key !== ui.timerKey) { ui.timerKey = key; ui.timerStart = Date.now(); }
+    if (ui.timer) clearInterval(ui.timer);
+    var tick = function () {
+      var left = 1 - (Date.now() - ui.timerStart) / (m.timed * 1000), bar = document.getElementById('tbar');
+      if (bar) { bar.style.transform = 'scaleX(' + Math.max(0, left) + ')'; bar.parentNode.classList.toggle('low', left < 0.3); }
+      if (left <= 0) {
+        clearInterval(ui.timer); ui.timer = null;
+        var cells = G.legalCells(m);
+        if (cells.length && run.match === m && m.turn === 'X') { ui.msg = 'Too slow! A random move was played.'; var note = G.tap(m, cells[Math.floor(Math.random() * cells.length)]); if (note) ui.msg += ' ' + note; afterAction(); }
+      }
+    };
+    tick();
+    ui.timer = setInterval(tick, 100);
   }
 
   /* ---------- flow ---------- */
   function finishRun() {
     if (run.recorded) return;
     run.recorded = true;
-    var b = ui.best, prog = run.over === 'won' ? 12 : (run.act - 1) * 4 + run.idx + 1;
-    b.runs++; if (prog > b.farthest) b.farthest = prog; if (run.over === 'won') b.victories++;
-    lsSet(BEST, JSON.stringify(b));
-    lsDel(SAVE); ui.saved = null;
+    var me = ui.meta, prog = run.over === 'won' ? 12 : (run.act - 1) * 4 + run.idx + 1;
+    me.runs++; if (prog > me.farthest) me.farthest = prog; if (run.over === 'won') me.victories++;
+    saveMeta(); lsDel(SAVE); ui.saved = null;
   }
   function afterAction() {
     var m = run.match;
     if (m && m.flash) { ui.msg = (ui.msg ? ui.msg + ' ' : '') + m.flash; m.flash = ''; }
-    if (run.phase === 'match' && m && m.over) G.resolve(run);
+    if (m && m.quake) { ui.quake = true; m.quake = 0; }
+    if (m && m.rotatedNow) { ui.boardTurn = true; m.rotatedNow = false; }
+    if (run.phase === 'match' && m && m.over) {
+      var out = G.resolve(run);
+      if (out.unlock && ui.meta.unlocked.indexOf(out.unlock) < 0) { ui.meta.unlocked.push(out.unlock); out.unlockNew = true; saveMeta(); }
+    }
     if (run.phase === 'end') finishRun(); else save();
     var needAI = run.phase === 'match' && m && !m.over && m.turn === 'O';
     ui.thinking = !!needAI;
-    if (m && m.kind === 'boss' && m.rotatedNow) ui.boardTurn = true;
     render();
     if (needAI) scheduleAI();
   }
@@ -1468,39 +1814,41 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Game;
     var r = run, m = r.match;
     setTimeout(function () {
       if (run !== r || r.match !== m || !ui.thinking) return;
-      var ev = m.kind === '5' ? G.ai5(m) : G.aiBoss(m);
+      var ev = G.ai(m);
       ui.msg = ev.join(' ');
       afterAction();
-    }, 420);
+    }, m.game === 'speed' ? 260 : 380);
   }
   function canAct() { return run && run.phase === 'match' && run.match && run.match.turn === 'X' && !run.match.over && !ui.thinking; }
 
   function onAct(a, d) {
-    var m = run && run.match, msg;
+    var m = run && run.match;
     switch (a) {
-      case 'new': run = G.startRun(); ui.msg = ''; ui.thinking = false; save(); render(); break;
+      case 'new': run = G.startRun(); ui.msg = ''; ui.thinking = false; ui.charIdx = 0; render(); break;
       case 'continue':
         if (!ui.saved) return;
         run = ui.saved; ui.saved = null; ui.msg = ''; ui.thinking = false;
-        ui.prevX = run.match && run.match.kind === '5' ? run.match.x : 0; ui.prevO = run.match && run.match.kind === '5' ? run.match.o : 0;
+        if (run.match && run.match.kind === 'grid') { ui.prevX = run.match.x; ui.prevO = run.match.o; }
         afterAction(); break;
-      case 'menu': if (run && run.phase !== 'end') save(); run = null; ui.thinking = false; ui.msg = ''; ui.saved = loadSaved(); render(); break;
-      case 'starter': G.pickStarter(run, d.id); ui.msg = ''; save(); render(); break;
-      case 'trick': G.chooseTrick(run, d.id); render(); break;
-      case 'startmatch': ui.msg = ''; ui.prevX = 0; ui.prevO = 0; if (G.startMatch(run)) afterAction(); break;
-      case 'cell':
-        if (!canAct() || m.kind !== '5') return;
-        ui.msg = G.tap5(m, +d.i) || ''; afterAction(); break;
-      case 'cell9':
-        if (!canAct() || m.kind !== 'boss') return;
-        ui.msg = G.tapBoss(m, +d.b, +d.c) || ''; afterAction(); break;
+      case 'menu': if (run && run.phase !== 'end' && run.phase !== 'char') save(); run = null; ui.thinking = false; ui.msg = ''; ui.saved = loadSaved(); render(); break;
+      case 'carprev': setChar(ui.charIdx - 1); break;
+      case 'carnext': setChar(ui.charIdx + 1); break;
+      case 'cardot': setChar(+d.i); break;
+      case 'pickchar':
+        var cid = G.CHAR_ORDER[ui.charIdx];
+        if (ui.meta.unlocked.indexOf(cid) < 0) return;
+        G.pickChar(run, cid); ui.msg = ''; save(); render(); break;
+      case 'opp': ui.msg = ''; if (G.startMatch(run, d.id)) afterAction(); break;
+      case 'startboss': ui.msg = ''; if (G.startMatch(run)) afterAction(); break;
+      case 'cell': if (!canAct() || m.kind !== 'grid') return; ui.msg = G.tap(m, +d.i) || ''; afterAction(); break;
+      case 'cell9': if (!canAct() || m.kind !== 'super') return; ui.msg = G.tap(m, +d.b, +d.c) || ''; afterAction(); break;
+      case 'round': if (m && m.turn === 'pause') { G.nextRound(m); ui.msg = 'Round ' + m.series.round + '. ' + (m.turn === 'O' ? 'The Referee goes first.' : 'You go first.'); afterAction(); } break;
       case 'relic':
         if (!m || run.phase !== 'match') return;
-        var id = d.id, r = G.RELICS[id] || G.TRICKS[id];
-        var isActive = G.RELICS[id] ? G.RELICS[id].kind === 'active' : (id === 'overplay' || id === 'freepass');
-        if (!isActive) { ui.msg = r.name + ': ' + r.desc; render(); return; }
+        var r = G.RELICS[d.id];
+        if (r.kind !== 'active') { ui.msg = r.name + ': ' + (r.only === 'grid' && m.kind !== 'grid' ? 'not used in Super XOX.' : r.desc); render(); return; }
         if (!canAct()) return;
-        ui.msg = (m.kind === '5' ? G.use5(m, id) : G.useBoss(m, id)) || ''; afterAction(); break;
+        ui.msg = G.use(m, d.id) || ''; afterAction(); break;
       case 'next': G.next(run); ui.msg = ''; afterAction(); break;
       case 'buy': ui.msg = G.buy(run, d.id); save(); render(); break;
       case 'heal': ui.msg = G.heal(run); save(); render(); break;
@@ -1515,8 +1863,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Game;
     onAct(t.dataset.act, t.dataset);
   });
 
-  lsDel('xoxrogue.run.v1');
-  ui.best = loadBest();
+  lsDel('xoxrogue.run.v1'); lsDel('xoxrogue.run.v2');
+  ui.meta = loadMeta();
   ui.saved = loadSaved();
   render();
 })();

@@ -62,8 +62,9 @@ for (const [id, r] of Object.entries(G.TRICKS)) ok(r.desc.split(' ').length <= 5
 }
 {
   const { m } = mk(['nuke']);
-  G.tap5(m, 12); G.ai5(m); G.tap5(m, 6); G.ai5(m);
-  ok(pc(m.o) === 2, 'AI has two marks');
+  const free = () => { for (let c = 0; c < 25; c++) if (G.emptyAt(m, c)) return c; };
+  G.tap5(m, free()); G.ai5(m); G.tap5(m, free()); G.ai5(m);
+  ok(pc(m.o) === 2 && !m.over, 'AI has two marks');
   G.use5(m, 'nuke');
   ok(m.o === 0 && pc(m.x) === 2 && m.turn === 'X', 'Nuke wipes all AI marks and keeps yours');
 }

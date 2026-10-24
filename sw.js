@@ -1,5 +1,5 @@
 /* Offline support: keep the game's files on the phone and serve them from there. */
-var CACHE = 'xoxpop-8042e5f8e8';
+var CACHE = 'xoxpop-3bed2b0ac5';
 var FILES = ["./","./index.html","./manifest.webmanifest","./icon.svg","./icon-192.png","./icon-512.png"];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));

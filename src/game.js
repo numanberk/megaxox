@@ -1,8 +1,8 @@
-/* XOX Pop rules: drop X and O pieces on a 7x7 board, three of a kind in a row or column pops. No DOM. */
+/* XOX Pop rules: drop X and O pieces on a 5x5 board, three of a kind in a row or column pops. No DOM. */
 var Game = (function () {
   'use strict';
 
-  var N = 7, CELLS = N * N, EMPTY = 0, X = 1, O = 2;
+  var N = 5, CELLS = N * N, EMPTY = 0, X = 1, O = 2;
   /* tuned with test/sim.js: a random tapper lasts ~30 pieces, a casual player ~100, a careful one ~240.
      mixed: share of multi-square pieces that alternate X and O. big: 4-square shapes, more of them each level.
      fairAll: tries to deal a tray where every piece fits. blastLen: run length that blasts. wipeLen: a cross needs

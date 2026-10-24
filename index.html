@@ -31,7 +31,7 @@
   --shadow: 0 10px 30px rgba(22, 28, 56, .16);
   /* board cell size: fits the width, and the height with everything around it */
   --gap: 5px;
-  --cell: min(calc((100vw - 32px - 6 * var(--gap) - 16px) / 7), calc((100svh - 350px) / 9.6), 56px);
+  --cell: min(calc((100vw - 32px - 4 * var(--gap) - 16px) / 5), calc((100svh - 350px) / 7.6), 64px);
   --f: ui-rounded, 'SF Pro Rounded', 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -198,11 +198,11 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 <body>
 <div id="app"></div>
 <script>
-/* XOX Pop rules: drop X and O pieces on a 7x7 board, three of a kind in a row or column pops. No DOM. */
+/* XOX Pop rules: drop X and O pieces on a 5x5 board, three of a kind in a row or column pops. No DOM. */
 var Game = (function () {
   'use strict';
 
-  var N = 7, CELLS = N * N, EMPTY = 0, X = 1, O = 2;
+  var N = 5, CELLS = N * N, EMPTY = 0, X = 1, O = 2;
   /* tuned with test/sim.js: a random tapper lasts ~30 pieces, a casual player ~100, a careful one ~240.
      mixed: share of multi-square pieces that alternate X and O. big: 4-square shapes, more of them each level.
      fairAll: tries to deal a tray where every piece fits. blastLen: run length that blasts. wipeLen: a cross needs

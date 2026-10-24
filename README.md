@@ -1,6 +1,6 @@
 # XOX Pop
 
-A one-thumb puzzle game that works offline. Drag X and O pieces onto a 7×7 board. Three of the same mark in a row or column pops.
+A one-thumb puzzle game that works offline. Drag X and O pieces onto a 5×5 board. Three of the same mark in a row or column pops.
 
 - **Blast:** four or more in a line also clears the rows next to it (or the columns, for a line going down).
 - **Board wipe:** a line across and a line down that cross, one of them four long, clear the whole board.

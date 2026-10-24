@@ -13,7 +13,7 @@
   --shadow: 0 10px 30px rgba(22, 28, 56, .16);
   /* board cell size: fits the width, and the height with everything around it */
   --gap: 5px;
-  --cell: min(calc((100vw - 32px - 6 * var(--gap) - 16px) / 7), calc((100svh - 350px) / 9.6), 56px);
+  --cell: min(calc((100vw - 32px - 4 * var(--gap) - 16px) / 5), calc((100svh - 350px) / 7.6), 64px);
   --f: ui-rounded, 'SF Pro Rounded', 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
